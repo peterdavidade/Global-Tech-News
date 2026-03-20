@@ -1,0 +1,587 @@
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghana & Global Current Affairs</title>
+    <link rel="stylesheet" href="home.css">
+</head>
+<body class="home-page">
+    <!-- Overlay + off-canvas navigation used by the hamburger button -->
+    <div class="nav-overlay" id="navOverlay" hidden></div>
+    <aside class="sidebar-nav" id="sidebarNav" aria-label="Sidebar navigation" aria-hidden="true">
+        <div class="sidebar-nav-header">
+            <div>
+                <span class="sidebar-kicker">Navigation</span>
+                <h2>Menu</h2>
+            </div>
+            <button type="button" class="sidebar-close" id="sidebarCloseButton" aria-label="Close menu">
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+
+        <nav class="sidebar-menu" aria-label="Primary sidebar">
+            <a href="#top" class="sidebar-link is-active" data-nav-link>
+                <span class="sidebar-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M4 11.5 12 5l8 6.5V20H4v-8.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                        <path d="M9.5 20v-5h5v5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span>Home</span>
+            </a>
+            <a href="#breakingHero" class="sidebar-link" data-nav-link>
+                <span class="sidebar-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M13 2 6 13h5l-1 9 8-12h-5l0-8Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <span>Breaking</span>
+            </a>
+            <a href="#latest-feed" class="sidebar-link" data-nav-link>
+                <span class="sidebar-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M5 6.5h14M5 12h14M5 17.5h9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span>Latest Feed</span>
+            </a>
+            <a href="#global-updates" class="sidebar-link" data-nav-link>
+                <span class="sidebar-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.7"/>
+                        <path d="M3.5 12h17M12 3.5c2.4 2.3 3.7 5.3 3.7 8.5S14.4 18.2 12 20.5M12 3.5C9.6 5.8 8.3 8.8 8.3 12s1.3 6.2 3.7 8.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span>World News</span>
+            </a>
+            <a href="#ghana-updates" class="sidebar-link" data-nav-link>
+                <span class="sidebar-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M12 3.5 14.5 8.5 20 9.3l-4 3.9.9 5.5L12 16l-4.9 2.7.9-5.5-4-3.9 5.5-.8L12 3.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <span>Ghana News</span>
+            </a>
+            <a href="previous-news.html" class="sidebar-link">
+                <span class="sidebar-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M8 7.5H19M8 12h11M8 16.5h11M5 7.5h.01M5 12h.01M5 16.5h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span>Previous News</span>
+            </a>
+            <a href="#site-footer" class="sidebar-link" data-nav-link>
+                <span class="sidebar-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M4 8.5 12 4l8 4.5v7L12 20l-8-4.5v-7Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                        <path d="M12 20v-7.5M4 8.5l8 4 8-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span>Contact</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main site header: breaking ticker, brand, and hamburger trigger -->
+    <header class="site-header" id="top">
+        <div class="news-header" aria-label="Breaking news ticker">
+            <div class="news-label">Breaking</div>
+            <div class="ticker-window">
+                <div class="ticker-track" id="tickerTrack">
+                    <span class="ticker-item"><strong>Live:</strong> Ghana officials review education and infrastructure priorities after fresh policy consultations.</span>
+                    <span class="ticker-item"><strong>Live:</strong> Emergency weather response teams issue new transport advisories as conditions change.</span>
+                    <span class="ticker-item"><strong>Live:</strong> Global markets watch inflation, energy costs, and technology earnings for direction.</span>
+                    <span class="ticker-item"><strong>Live:</strong> Diplomatic talks continue as world leaders respond to new regional security tensions.</span>
+                    <span class="ticker-item"><strong>Live:</strong> Accra business community tracks demand shifts, hiring trends, and investment sentiment.</span>
+                    <span class="ticker-item"><strong>Live:</strong> Ghana officials review education and infrastructure priorities after fresh policy consultations.</span>
+                    <span class="ticker-item"><strong>Live:</strong> Emergency weather response teams issue new transport advisories as conditions change.</span>
+                    <span class="ticker-item"><strong>Live:</strong> Global markets watch inflation, energy costs, and technology earnings for direction.</span>
+                    <span class="ticker-item"><strong>Live:</strong> Diplomatic talks continue as world leaders respond to new regional security tensions.</span>
+                    <span class="ticker-item"><strong>Live:</strong> Accra business community tracks demand shifts, hiring trends, and investment sentiment.</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="header-shell">
+            <div class="brand-block">
+                <a href="#" class="brand-link" aria-label="Pulse24 News home">
+                    <span class="brand-kicker">Current Affairs</span>
+                    <span class="brand-name">The Daily Affairs</span>
+                </a>
+                <p class="brand-summary">Fast, reliable coverage of the last 24 hours in Ghana and around the world.</p>
+            </div>
+
+            <div class="header-tools">
+                <button
+                    type="button"
+                    class="hamburger-button"
+                    id="hamburgerButton"
+                    aria-label="Open navigation menu"
+                    aria-controls="sidebarNav"
+                    aria-expanded="false"
+                >
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+
+
+                <!-- date -->
+                <!-- date -->
+                <!-- date -->
+                <!-- date -->
+                <!-- date -->
+                <!-- date -->
+                <!-- date -->
+                <!-- date -->
+                <div class="header-date">
+                    <span class="mini-title">Live Desk</span>
+                    <strong id="currentDate">March 20, 2026</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-shell">
+            <nav class="main-nav" aria-label="Primary">
+                <a href="#ghana-updates">Ghana News</a>
+                <a href="#global-updates">World News</a>
+                <a href="#mainFeed">Politics</a>
+                <a href="#mainFeed">Technology</a>
+                <a href="#mainFeed">Business</a>
+                <a href="#mainFeed">Education</a>
+                <a href="previous-news.html">Previous News</a>
+                <a href="#breakingHero">Breaking News</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main page content starts here -->
+    <!-- Main page content starts here -->
+    <!-- Main page content starts here -->
+    <!-- Main page content starts here -->
+    <!-- Main page content starts here -->
+    <!-- Main page content starts here -->
+
+    <main class="page-shell">
+        <!-- Hero section for the lead story area -->
+        <!-- Hero section for the lead story area -->
+        <!-- Hero section for the lead story area -->
+        <!-- Hero section for the lead story area -->
+        <!-- Hero section for the lead story area -->
+        <!-- Hero section for the lead story area -->
+        <!-- Hero section for the lead story area -->
+        <section class="hero-layout" id="breakingHero">
+            <article class="hero-panel">
+                <div class="hero-overlay"></div>
+                <div class="hero-content">
+                    <div class="hero-topline">
+                        <span class="section-chip chip-danger">Breaking News</span>
+                        <span class="live-pill">Last 24 Hours</span>
+                    </div>
+                    <h1>Ghana and the world in motion: the major developments shaping the current affairs agenda today</h1> 
+                    <p>
+                        Track the biggest stories from Accra to Washington, Brussels, Nairobi, and beyond with a
+                        newsroom homepage built for fresh developments, context, and rapid updates.
+                    </p>
+                    <div class="hero-meta">
+                        <span>Updated continuously</span>
+                        <span>Global desk coverage</span>
+                        <span id="heroTimestamp">Updated 30 minutes ago</span>
+                    </div>
+                    <div class="hero-actions">
+                        <a href="#mainFeed" class="primary-button">Read Top Stories</a>
+                        <a href="#global-updates" class="ghost-link">View 24-Hour Global Updates</a>
+                    </div>
+                </div>
+            </article>
+
+            <aside class="hero-side">
+                <article class="side-brief">
+                    <span class="section-chip">Ghana Spotlight</span>
+                    <h2>Policy, business, education, and civic developments from across Ghana</h2>
+                    <p>Watch the stories driving public conversation, governance, and economic movement in the country.</p>
+                </article>
+
+                <article class="side-brief">
+                    <span class="section-chip">World Watch</span>
+                    <h2>Diplomacy, markets, technology, and security events from the last 24 hours</h2>
+                    <p>Keep up with the major international stories that are influencing regional and global headlines.</p>
+                </article>
+            </aside>
+        </section>
+
+        <section class="headline-bar" aria-label="Fast headline summary">
+            <article>
+                <span class="mini-tag">Ghana</span>
+                <p>Political, education, and infrastructure developments remain central to the national conversation.</p>
+            </article>
+
+            <article>
+                <span class="mini-tag">World</span>
+                <p>Geopolitics, inflation, climate, and security continue to dominate the global breaking-news cycle.</p>
+            </article>
+
+            <article>
+                <span class="mini-tag">Markets</span>
+                <p>Investors are watching technology earnings, commodity prices, and central-bank signals closely.</p>
+            </article>
+        </section>
+
+        <section class="main-grid">
+            <!-- Primary article feed rendered from JavaScript -->
+            <div class="feed-column" id="latest-feed">
+                <div class="section-head">
+                    <div>
+                        <span class="section-chip">Latest Feed</span>
+                        <h2>News from the last 24 hours</h2>
+                    </div>
+                    <p class="section-copy">A rolling feed of recent stories, built to help you publish and update fast.</p>
+                </div>
+
+
+                <!-- news from 24 hours -->
+                 <!-- news from 24 hours -->
+                  <!-- news from 24 hours -->
+                   <!-- news from 24 hours -->
+                    <!-- news from 24 hours -->
+                <div class="feed-grid" id="mainFeed">
+                    <article class="article-card" data-article-id="1">
+                        <div class="article-thumb">
+                            <img src="./images/Prez mahama.jpg" alt="Students and teachers in a classroom using digital learning tools">
+                        </div>
+                        <div class="article-body">
+                            <div class="article-topline">
+                                <span class="article-tag">Education</span>
+                                <span class="article-location">Accra</span>
+                                <span class="article-time">35 minutes ago</span>
+                            </div>
+                            <h3 class="article-title">President Mahama admits some NDC members 
+                                are involved in galamsey, vows to intensify the fight</h3>
+                            <p class="article-summary">President John Dramani Mahama has acknowledged
+                                 that some members of the National Democratic Congress 
+                                 (NDC) are involved in illegal mining, as he
+                                 reaffirmed government’s commitment to intensifying the fight against the menace.</p>
+                            <div class="article-footer">
+                                <span class="article-time">Published within the last 24 hours</span>
+
+                                <!-- insert link for read more here  -->
+                                <!-- insert link for read more here  -->
+                                <!-- insert link for read more here  -->
+                                <!-- insert link for read more here  -->
+                                <a href="News 24 hours 1.html" class="read-more">Read More</a>
+                            </div>
+                            <div class="engagement-host" data-engagement-for="1"></div>
+                        </div>
+                    </article>
+
+                    <article class="article-card" data-article-id="10">
+                        <div class="article-thumb">
+
+                            <!-- insert image here  -->
+                            <!-- insert image here  -->
+                            <!-- insert image here  -->
+                            <!-- insert image here  -->
+                            <!-- insert image here  -->
+                            <img src="./images/Black Rasta.webp" alt="President John Mahama speaking during a national address">
+                        </div>
+                        <div class="article-body">
+                            <div class="article-topline">
+                                <span class="article-tag">Breaking News</span>
+                                <span class="article-location">Accra</span>
+                                <span class="article-time">12 minutes ago</span>
+                            </div>
+
+
+                            <h3 class="article-title">Ghana education planners review digital learning rollout across regional schools</h3>
+                            <p class="article-summary">Officials and education leaders are assessing infrastructure, teacher readiness, and device access as schools expand digital learning initiatives.</p>
+                            <div class="article-footer">
+                                <span class="article-time">Published within the last 24 hours</span>
+                                <a href="News 24 hours 2.html" class="read-more">Read More</a>
+                            </div>
+                            <div class="engagement-host" data-engagement-for="10"></div>
+                        </div>
+                    </article>
+
+
+                    <article class="article-card" data-article-id="3">
+                        <div class="article-thumb">
+
+
+                            <!-- insert image here -->
+                            <img src="./images/Untitled-1.png" alt="Political leaders in a parliamentary session">
+                        </div>
+                        <div class="article-body">
+                            <div class="article-topline">
+                                <span class="article-tag">Politics</span>
+                                <span class="article-location">Parliament House</span>
+                                <span class="article-time">1h 30m ago</span>
+                            </div>
+                            <h3 class="article-title">Parliament debate sharpens focus on policy priorities and public spending in Ghana</h3>
+                            <p class="article-summary">Political debate is centering on social investment, infrastructure delivery, and the balance between near-term pressure and long-term reforms.</p>
+                            <div class="article-footer">
+                                <span class="article-time">Published within the last 24 hours</span>
+
+                                 <!-- insert link for read more here  -->
+                                <a href="News 24 hours 3.html" class="read-more">Read More</a>
+                            </div>
+                            <div class="engagement-host" data-engagement-for="3"></div>
+                        </div>
+                    </article>
+
+                    <article class="article-card" data-article-id="2">
+                        <div class="article-thumb">
+                            <img src="./images/Sam george.jpg" alt="World leaders meeting during an international diplomatic session">
+                        </div>
+                        <div class="article-body">
+                            <div class="article-topline">
+                                <span class="article-tag">World News</span>
+                                <span class="article-location">Brussels</span>
+                                <span class="article-time">58 minutes ago</span>
+                            </div>
+                            <h3 class="article-title">World leaders push for fresh diplomacy after new regional security tensions</h3>
+                            <p class="article-summary">International capitals are balancing calls for restraint, emergency consultations, and economic contingency planning amid a fast-moving security story.</p>
+                            <div class="article-footer">
+                                <span class="article-time">Published within the last 24 hours</span>
+
+
+
+                                 <!-- insert link for read more here  -->
+                                 <!-- insert link for read more here  -->
+                                 <!-- insert link for read more here  -->
+                                 <!-- insert link for read more here  -->
+                                 <!-- insert link for read more here  -->
+                                 <!-- insert link for read more here  -->
+                                 <!-- insert link for read more here  -->
+                                 <!-- insert link for read more here  -->
+                                 <!-- insert link for read more here  -->
+                                <a href="News 24 hours 4.html" class="read-more">Read More</a>
+                            </div>
+                            <div class="engagement-host" data-engagement-for="2"></div>
+                        </div>
+                    </article>
+                </div>
+                <div class="section-end-link">
+                    <a href="previous-news.html" class="archive-link">Click Here for Previous News</a>
+                </div>
+            </div>
+
+            <!-- Optional right-side content rail -->
+            <!-- Optional right-side content rail -->
+            <!-- Optional right-side content rail -->
+            <!-- Optional right-side content rail -->
+            <!-- Optional right-side content rail -->
+            <!-- Optional right-side content rail -->
+            <aside class="sidebar-column">
+                <section class="sidebar-card search-card">
+                    <div class="sidebar-heading">
+                        <span class="section-chip">Search</span>
+                        <h3>Find a story fast</h3>
+                    </div>
+                    <form class="search-form" id="searchForm">
+                        <label class="sr-only" for="searchInput">Search articles</label>
+                        <input type="search" id="searchInput" placeholder="Search by headline, category, or country">
+                        <button type="submit">Search</button>
+                    </form>
+                </section>
+
+                <section class="sidebar-card">
+                    <div class="sidebar-heading">
+                        <span class="section-chip">Trending Stories</span>
+                        <h3>Most discussed right now</h3>
+                    </div>
+                    <div class="stack-list" id="trendingList"></div>
+                </section>
+
+                <section class="sidebar-card">
+                    <div class="sidebar-heading">
+                        <span class="section-chip">Latest Updates</span>
+                        <h3>Within the last 24 hours</h3>
+                    </div>
+                    <div class="stack-list" id="latestUpdatesList"></div>
+                </section>
+
+                <section class="sidebar-card social-card">
+                    <div class="sidebar-heading">
+                        <span class="section-chip">Follow Us</span>
+                        <h3>Stay connected</h3>
+                    </div>
+                    <div class="social-grid">
+                        <a href="#" class="social-link facebook">Facebook</a>
+                        <a href="#" class="social-link x">Whatsaap / X</a>
+                        <a href="#" class="social-link telegram">Telegram</a>
+                        
+                    </div>
+                </section>
+            </aside>
+        </section>
+        <!-- Dedicated section for international stories -->
+        <section class="updates-section" id="global-updates">
+            <div class="section-head">
+                <div>
+                    <span class="section-chip">24-Hour Global Updates</span>
+                    <h2>Major international developments</h2>
+                </div>
+                <p class="section-copy">A dedicated stream for worldwide current affairs, diplomacy, business, and technology.</p>
+            </div>
+            <div class="updates-grid" id="globalFeed">
+                <article class="update-card" data-article-id="6">
+                    <div class="update-visual">
+                        <img src="./images/Read More Icon.png" alt="Emergency responders working during severe weather disruption">
+                    </div>
+                    <div class="article-topline">
+                        <span class="article-tag">Breaking News</span>
+                        <span class="article-time">12 minutes ago</span>
+                    </div>
+                    <h3>Breaking: emergency responders coordinate after severe weather disrupts transport links</h3>
+                    <p>Authorities are issuing travel guidance, monitoring infrastructure stress, and preparing recovery plans as conditions evolve.</p>
+                    <a href="News 24 hours 2.html" class="read-more">Read More</a>
+                    <div class="engagement-host" data-engagement-for="6"></div>
+                </article>
+
+                <article class="update-card" data-article-id="2">
+                    <div class="update-visual">
+                        <img src="./images/news-world.jpg" alt="World leaders meeting during an international diplomatic session">
+                    </div>
+                    <div class="article-topline">
+                        <span class="article-tag">World News</span>
+                        <span class="article-time">58 minutes ago</span>
+                    </div>
+                    <h3>World leaders push for fresh diplomacy after new regional security tensions</h3>
+                    <p>International capitals are balancing calls for restraint, emergency consultations, and economic contingency planning amid a fast-moving security story.</p>
+                    <a href="News 24 hours 4.html" class="read-more">Read More</a>
+                    <div class="engagement-host" data-engagement-for="2"></div>
+                </article>
+
+                <article class="update-card" data-article-id="4">
+                    <div class="update-visual">
+                        <img src="./images/news-business.jpg" alt="Market data displayed on trading screens">
+                    </div>
+                    <div class="article-topline">
+                        <span class="article-tag">Business</span>
+                        <span class="article-time">2h 10m ago</span>
+                    </div>
+                    <h3>Global markets react to fresh inflation data and technology sector earnings guidance</h3>
+                    <p>Investors are weighing company performance, central-bank expectations, and changing demand signals across major sectors.</p>
+                    <a href="News 24 hours 4.html" class="read-more">Read More</a>
+                    <div class="engagement-host" data-engagement-for="4"></div>
+                </article>
+
+                <article class="update-card" data-article-id="9">
+                    <div class="update-visual">
+                        <img src="./images/news-diplomacy.jpg" alt="Officials meeting over border, trade, and migration coordination">
+                    </div>
+                    <div class="article-topline">
+                        <span class="article-tag">World News</span>
+                        <span class="article-time">5h 20m ago</span>
+                    </div>
+                    <h3>Governments review border, trade, and migration coordination after new international talks</h3>
+                    <p>Officials say the latest talks could influence regional commerce, security planning, and diplomatic engagement in the weeks ahead.</p>
+                    <a href="News 24 hours 4.html" class="read-more">Read More</a>
+                    <div class="engagement-host" data-engagement-for="9"></div>
+                </article>
+            </div>
+            <div class="section-end-link">
+                <a href="previous-news.html" class="archive-link">Click Here for Previous News</a>
+            </div>
+        </section>
+
+        <!-- Dedicated section for Ghana-focused stories -->
+        <section class="updates-section" id="ghana-updates">
+            <div class="section-head">
+                <div>
+                    <span class="section-chip chip-accent">24-Hour Ghana News</span>
+                    <h2>Fresh developments from Ghana</h2>
+                </div>
+                <p class="section-copy">Coverage focused on governance, education, business, local communities, and public affairs.</p>
+            </div>
+            <div class="updates-grid" id="ghanaFeed">
+                <article class="update-card" data-article-id="1">
+                    <div class="update-visual">
+                        <img src="./images/news-education.jpg" alt="Students and teachers in a classroom using digital learning tools">
+                    </div>
+                    <div class="article-topline">
+                        <span class="article-tag">Education</span>
+                        <span class="article-time">35 minutes ago</span>
+                    </div>
+                    <h3>Ghana education planners review digital learning rollout across regional schools</h3>
+                    <p>Officials and education leaders are assessing infrastructure, teacher readiness, and device access as schools expand digital learning initiatives.</p>
+                    <a href="News 24 hours 1.html" class="read-more">Read More</a>
+                    <div class="engagement-host" data-engagement-for="1"></div>
+                </article>
+
+                <article class="update-card" data-article-id="3">
+                    <div class="update-visual">
+                        <img src="./images/news-politics.jpg" alt="Political leaders in a parliamentary session">
+                    </div>
+                    <div class="article-topline">
+                        <span class="article-tag">Politics</span>
+                        <span class="article-time">1h 30m ago</span>
+                    </div>
+                    <h3>Parliament debate sharpens focus on policy priorities and public spending in Ghana</h3>
+                    <p>Political debate is centering on social investment, infrastructure delivery, and the balance between near-term pressure and long-term reforms.</p>
+                    <a href="News 24 hours 3.html" class="read-more">Read More</a>
+                    <div class="engagement-host" data-engagement-for="3"></div>
+                </article>
+
+                <article class="update-card" data-article-id="7">
+                    <div class="update-visual">
+                        <img src="./images/news-accra-business.jpg" alt="Business owners discussing market trends in Accra">
+                    </div>
+                    <div class="article-topline">
+                        <span class="article-tag">Business</span>
+                        <span class="article-time">3h 30m ago</span>
+                    </div>
+                    <h3>Businesses in Accra adjust hiring and investment plans as consumer demand shifts</h3>
+                    <p>Company leaders are focusing on cost discipline, expansion strategy, and digital operations as market conditions evolve.</p>
+                    <a href="News 24 hours 1.html" class="read-more">Read More</a>
+                    <div class="engagement-host" data-engagement-for="7"></div>
+                </article>
+
+                <article class="update-card" data-article-id="8">
+                    <div class="update-visual">
+                        <img src="./images/news-research.jpg" alt="University researchers collaborating in a laboratory or campus setting">
+                    </div>
+                    <div class="article-topline">
+                        <span class="article-tag">Education</span>
+                        <span class="article-time">4h 20m ago</span>
+                    </div>
+                    <h3>Universities expand research partnerships as innovation funding grows in West Africa</h3>
+                    <p>Education and technology institutions are forming new collaborations aimed at skills development and applied research.</p>
+                    <a href="News 24 hours 1.html" class="read-more">Read More</a>
+                    <div class="engagement-host" data-engagement-for="8"></div>
+                </article>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer with brand and contact details -->
+    <footer class="site-footer" id="site-footer">
+        <div class="footer-main">
+            <div>
+                <p class="footer-brand">Global 24 News</p>
+                <p class="footer-note">A current affairs newsroom focused on the last 24 hours in Ghana and worldwide.</p>
+            </div>
+
+            <div class="footer-contact">
+                <p><strong>Email:</strong> GlobalCurrentAffairs.com</p>
+                <p><strong>Phone:</strong> +233 59 824 2203</p>
+                <p><strong>Location:</strong> Accra, Ghana</p>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div class="footer-links">
+                
+                <a href="#">Whatsaap</a>
+                <a href="#" target="_blank">Telegram</a>
+                
+           
+    </footer>
+
+    <script src="newsroom-data.js"></script>
+    <script src="home.js"></script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previous News | Ghana & Global Current Affairs</title>
+    <link rel="stylesheet" href="home.css">
+</head>
+<body class="archive-page">
+    <div class="nav-overlay" id="navOverlay" hidden></div>
+    <aside class="sidebar-nav" id="sidebarNav" aria-label="Sidebar navigation" aria-hidden="true">
+        <div class="sidebar-nav-header">
+            <div>
+                <span class="sidebar-kicker">Navigation</span>
+                <h2>Menu</h2>
+            </div>
+            <button type="button" class="sidebar-close" id="sidebarCloseButton" aria-label="Close menu">
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+
+        <nav class="sidebar-menu" aria-label="Primary sidebar">
+            <a href="home.html#top" class="sidebar-link">
+                <span class="sidebar-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M4 11.5 12 5l8 6.5V20H4v-8.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                        <path d="M9.5 20v-5h5v5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span>Home</span>
+            </a>
+            <a href="home.html#latest-feed" class="sidebar-link">
+                <span class="sidebar-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M5 6.5h14M5 12h14M5 17.5h9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span>Latest Feed</span>
+            </a>
+            <a href="home.html#global-updates" class="sidebar-link">
+                <span class="sidebar-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.7"/>
+                        <path d="M3.5 12h17M12 3.5c2.4 2.3 3.7 5.3 3.7 8.5S14.4 18.2 12 20.5M12 3.5C9.6 5.8 8.3 8.8 8.3 12s1.3 6.2 3.7 8.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span>World News</span>
+            </a>
+            <a href="home.html#ghana-updates" class="sidebar-link">
+                <span class="sidebar-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M12 3.5 14.5 8.5 20 9.3l-4 3.9.9 5.5L12 16l-4.9 2.7.9-5.5-4-3.9 5.5-.8L12 3.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <span>Ghana News</span>
+            </a>
+            <a href="#previous-news-top" class="sidebar-link is-active" data-nav-link>
+                <span class="sidebar-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M8 7.5H19M8 12h11M8 16.5h11M5 7.5h.01M5 12h.01M5 16.5h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span>Previous News</span>
+            </a>
+        </nav>
+    </aside>
+
+    <header class="site-header" id="previous-news-top">
+        <div class="news-header" aria-label="Archive banner">
+            <div class="news-label">Archive</div>
+            <div class="ticker-window">
+                <div class="ticker-track" id="tickerTrack">
+                    <span class="ticker-item"><strong>Browse:</strong> Previous Ghana and world updates collected for easy access.</span>
+                    <span class="ticker-item"><strong>Browse:</strong> Previous Ghana and world updates collected for easy access.</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="header-shell">
+            <div class="brand-block">
+                <a href="home.html" class="brand-link" aria-label="Return to homepage">
+                    <span class="brand-kicker">Archive</span>
+                    <span class="brand-name">Previous News</span>
+                </a>
+                <p class="brand-summary">Earlier reports, background stories, and follow-up coverage from Ghana and around the world.</p>
+            </div>
+
+            <div class="header-tools">
+                <a href="home.html" class="primary-button home-return-link">Home Page</a>
+                <button
+                    type="button"
+                    class="hamburger-button"
+                    id="hamburgerButton"
+                    aria-label="Open navigation menu"
+                    aria-controls="sidebarNav"
+                    aria-expanded="false"
+                >
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <div class="header-date">
+                    <span class="mini-title">Archive Desk</span>
+                    <strong>Past Updates</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-shell">
+            <nav class="main-nav" aria-label="Archive navigation">
+                <a href="home.html">Back To Home</a>
+                <a href="#archive-world">World Archive</a>
+                <a href="#archive-ghana">Ghana Archive</a>
+                <a href="#archive-context">Context Stories</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-shell">
+        <section class="updates-section">
+            <div class="section-head">
+                <div>
+                    <span class="section-chip">Archive Overview</span>
+                    <h2>Previous stories in one place</h2>
+                </div>
+                <p class="section-copy">Use this page to keep older but still relevant stories available without crowding the homepage.</p>
+            </div>
+            <div class="updates-grid archive-grid">
+                <article class="update-card" id="archive-world">
+                    <div class="update-visual">
+                        <img src="./images/news-technology.jpg" alt="A technology interface representing AI and digital regulation">
+                    </div>
+                    <div class="article-topline">
+                        <span class="article-tag">Technology</span>
+                        <span class="article-time">Yesterday</span>
+                    </div>
+                    <h3>Technology regulators examine new platform rules around privacy and AI-generated content</h3>
+                    <p>The debate includes transparency requirements, consumer protections, and the responsibilities of large digital platforms.</p>
+                    <a href="#" class="read-more">Read More</a>
+                </article>
+
+                <article class="update-card" id="archive-ghana">
+                    <div class="update-visual">
+                        <img src="./images/news-research.jpg" alt="University researchers collaborating in a laboratory or campus setting">
+                    </div>
+                    <div class="article-topline">
+                        <span class="article-tag">Education</span>
+                        <span class="article-time">Yesterday</span>
+                    </div>
+                    <h3>Universities expand research partnerships as innovation funding grows in West Africa</h3>
+                    <p>Education and technology institutions are forming new collaborations aimed at skills development and applied research.</p>
+                    <a href="#" class="read-more">Read More</a>
+                </article>
+
+                <article class="update-card" id="archive-context">
+                    <div class="update-visual">
+                        <img src="./images/news-accra-business.jpg" alt="Business owners discussing market trends in Accra">
+                    </div>
+                    <div class="article-topline">
+                        <span class="article-tag">Business</span>
+                        <span class="article-time">2 days ago</span>
+                    </div>
+                    <h3>Businesses in Accra adjust hiring and investment plans as consumer demand shifts</h3>
+                    <p>Company leaders are focusing on cost discipline, expansion strategy, and digital operations as market conditions evolve.</p>
+                    <a href="#" class="read-more">Read More</a>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-main">
+            <div>
+                <p class="footer-brand">Global 24 News</p>
+                <p class="footer-note">Archive page for earlier current affairs coverage from Ghana and around the world.</p>
+            </div>
+            <div class="footer-contact">
+                <p><strong>Back:</strong> <a href="home.html">Return to homepage</a></p>
+                <p><strong>Email:</strong> GlobalCurrentAffairs.com</p>
+                <p><strong>Location:</strong> Tamale, Ghana</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="newsroom-data.js"></script>
+    <script src="home.js"></script>
+</body>
+</html>

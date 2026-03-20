@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Newsroom Console</title>
+    <link rel="stylesheet" href="admin-console.css">
+</head>
+<body>
+    <div class="login-gate" id="loginGate">
+        <form class="login-card" id="loginForm">
+            <span class="panel-kicker">Private Console</span>
+            <h1>Newsroom Access</h1>
+            <p>Enter your passcode to manage stories, upload images, and review analytics.</p>
+            <label for="adminPasscode">Passcode</label>
+            <input type="password" id="adminPasscode" name="adminPasscode" autocomplete="current-password" required>
+            <button type="submit">Unlock Console</button>
+            <p class="status-text" id="loginStatus"></p>
+        </form>
+    </div>
+
+    <main class="admin-shell" id="adminShell" hidden>
+        <header class="admin-header">
+            <div>
+                <span class="panel-kicker">The Daily Affairs</span>
+                <h1>Newsroom Console</h1>
+                <p>Create, update, publish, archive, and monitor the news desk from one place.</p>
+            </div>
+            <div class="header-actions">
+                <a href="home.html" class="ghost-action">View Site</a>
+                <button type="button" class="ghost-action" id="logoutButton">Log Out</button>
+            </div>
+        </header>
+
+        <section class="admin-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="panel-kicker">Analytics</span>
+                    <h2>Visitor overview</h2>
+                </div>
+                <p class="section-note">Static-mode analytics in this build are browser-local. For real cross-user reporting, connect a server or analytics service.</p>
+            </div>
+            <div class="analytics-grid" id="analyticsGrid"></div>
+        </section>
+
+        <section class="admin-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="panel-kicker">Homepage Hero</span>
+                    <h2>Featured on desk</h2>
+                </div>
+                <p class="section-note">This story appears in the large hero section at the top of the homepage.</p>
+            </div>
+            <div class="hero-assignment" id="heroAssignment"></div>
+        </section>
+
+        <section class="admin-grid">
+            <section class="admin-panel">
+                <div class="section-heading">
+                    <div>
+                        <span class="panel-kicker">Publishing</span>
+                        <h2 id="editorTitle">Create a post</h2>
+                    </div>
+                    <button type="button" class="ghost-action" id="resetEditorButton">New Post</button>
+                </div>
+
+                <form class="editor-form" id="postForm">
+                    <input type="hidden" id="postId" name="postId">
+
+                    <label for="postTitle">Headline</label>
+                    <input type="text" id="postTitle" name="title" maxlength="180" required>
+
+                    <label for="postSummary">Summary</label>
+                    <textarea id="postSummary" name="summary" rows="3" maxlength="320" required></textarea>
+
+                    <label for="postContent">Full story</label>
+                    <textarea id="postContent" name="content" rows="9" required></textarea>
+
+                    <div class="form-split">
+                        <div>
+                            <label for="postCategory">Category</label>
+                            <select id="postCategory" name="category">
+                                <option>Breaking News</option>
+                                <option>Politics</option>
+                                <option>World News</option>
+                                <option>Business</option>
+                                <option>Technology</option>
+                                <option>Education</option>
+                                <option>Sports</option>
+                                <option>Music</option>
+                                <option>Entertainment</option>
+                                <option>Music Releases</option>
+                                <option>Concerts & Events</option>
+                                <option>Celebrity News</option>
+                                <option>General</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="postRegion">Region</label>
+                            <select id="postRegion" name="region">
+                                <option>Ghana</option>
+                                <option>World</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-split">
+                        <div>
+                            <label for="postLocation">Location</label>
+                            <input type="text" id="postLocation" name="location" maxlength="80" required>
+                        </div>
+
+                        <div>
+                            <label for="postStatus">Status</label>
+                            <select id="postStatus" name="status">
+                                <option value="published">Published</option>
+                                <option value="archived">Archived</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label for="postImageAlt">Image alt text</label>
+                    <input type="text" id="postImageAlt" name="imageAlt" maxlength="180" required>
+
+                    <label for="postImageFile">Upload image</label>
+                    <input type="file" id="postImageFile" name="imageFile" accept="image/*">
+                    <label for="postImageFile2">Optional second image</label>
+                    <input type="file" id="postImageFile2" name="imageFile2" accept="image/*">
+                    <label for="postImageFile3">Optional third image</label>
+                    <input type="file" id="postImageFile3" name="imageFile3" accept="image/*">
+                    <div class="image-preview-grid" id="imagePreviewGrid">
+                        <img class="image-preview" id="imagePreview" alt="Selected post preview 1" hidden>
+                        <img class="image-preview" id="imagePreview2" alt="Selected post preview 2" hidden>
+                        <img class="image-preview" id="imagePreview3" alt="Selected post preview 3" hidden>
+                    </div>
+
+                    <div class="form-split checks">
+                        <label class="checkbox-row">
+                            <input type="checkbox" id="postFeatured" name="featured">
+                            <span>Feature on desk</span>
+                        </label>
+
+                        <label class="checkbox-row">
+                            <input type="checkbox" id="postTrending" name="trending">
+                            <span>Mark as trending</span>
+                        </label>
+                    </div>
+
+                    <div class="editor-actions">
+                        <button type="submit" class="primary-action">Save Post</button>
+                        <p class="status-text" id="editorStatus"></p>
+                    </div>
+                </form>
+            </section>
+
+            <section class="admin-panel">
+                <div class="section-heading">
+                    <div>
+                        <span class="panel-kicker">Library</span>
+                        <h2>Manage posts</h2>
+                    </div>
+                    <p class="section-note">Edit headlines, archive older stories, or delete drafts you no longer want.</p>
+                </div>
+                <div class="posts-list" id="postsList"></div>
+            </section>
+        </section>
+
+        <section class="admin-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="panel-kicker">Protection</span>
+                    <h2>Passcode settings</h2>
+                </div>
+                <p class="section-note">This static site uses obscurity plus a browser-side passcode. For real attacker-resistant protection, move admin auth to a backend.</p>
+            </div>
+            <form class="settings-form" id="settingsForm">
+                <label for="newPasscode">Set a new passcode</label>
+                <input type="password" id="newPasscode" name="newPasscode" minlength="8" required>
+                <button type="submit" class="primary-action">Update Passcode</button>
+                <p class="status-text" id="settingsStatus"></p>
+            </form>
+        </section>
+    </main>
+
+    <script src="newsroom-data.js"></script>
+    <script src="admin-console.js"></script>
+</body>
+</html>
