@@ -13,8 +13,12 @@ const {
     hasAdminSession,
     setAdminPasscode,
     formatDisplayDate,
-    getLiveDeskSettings,
-    setLiveDeskSettings,
+    getLiveTickerItems,
+    setLiveTickerItems,
+    clearLiveTickerItems,
+    getArchiveTickerItems,
+    setArchiveTickerItems,
+    clearArchiveTickerItems,
     saveMediaFile,
     getMediaBlob
 } = window.NewsroomStore || {};
@@ -34,10 +38,18 @@ const postsList = document.getElementById("postsList");
 const resetEditorButton = document.getElementById("resetEditorButton");
 const settingsForm = document.getElementById("settingsForm");
 const settingsStatus = document.getElementById("settingsStatus");
-const liveDeskForm = document.getElementById("liveDeskForm");
-const liveDeskLabelInput = document.getElementById("liveDeskLabel");
-const liveDeskValueInput = document.getElementById("liveDeskValue");
-const liveDeskStatus = document.getElementById("liveDeskStatus");
+const liveTickerForm = document.getElementById("liveTickerForm");
+const liveTicker1Input = document.getElementById("liveTicker1");
+const liveTicker2Input = document.getElementById("liveTicker2");
+const liveTicker3Input = document.getElementById("liveTicker3");
+const liveTickerStatus = document.getElementById("liveTickerStatus");
+const clearLiveTickerButton = document.getElementById("clearLiveTickerButton");
+const archiveTickerForm = document.getElementById("archiveTickerForm");
+const archiveTicker1Input = document.getElementById("archiveTicker1");
+const archiveTicker2Input = document.getElementById("archiveTicker2");
+const archiveTicker3Input = document.getElementById("archiveTicker3");
+const archiveTickerStatus = document.getElementById("archiveTickerStatus");
+const clearArchiveTickerButton = document.getElementById("clearArchiveTickerButton");
 const imageFileInput = document.getElementById("postImageFile");
 const imageFileInput2 = document.getElementById("postImageFile2");
 const imageFileInput3 = document.getElementById("postImageFile3");
@@ -594,36 +606,142 @@ if (settingsForm) {
     });
 }
 
-if (liveDeskForm) {
-    const existing = typeof getLiveDeskSettings === "function" ? getLiveDeskSettings() : null;
+if (liveTickerForm) {
+    const existing = typeof getLiveTickerItems === "function" ? getLiveTickerItems() : [];
 
-    if (existing && liveDeskLabelInput) {
-        liveDeskLabelInput.value = existing.label || "";
+    if (liveTicker1Input) {
+        liveTicker1Input.value = existing[0] || "";
     }
 
-    if (existing && liveDeskValueInput) {
-        liveDeskValueInput.value = existing.value || "";
+    if (liveTicker2Input) {
+        liveTicker2Input.value = existing[1] || "";
     }
 
-    liveDeskForm.addEventListener("submit", (event) => {
+    if (liveTicker3Input) {
+        liveTicker3Input.value = existing[2] || "";
+    }
+
+    liveTickerForm.addEventListener("submit", (event) => {
         event.preventDefault();
 
-        if (typeof setLiveDeskSettings !== "function") {
-            if (liveDeskStatus) {
-                setStatus(liveDeskStatus, "Live Desk settings are unavailable in this build.", "error");
+        if (typeof setLiveTickerItems !== "function") {
+            if (liveTickerStatus) {
+                setStatus(liveTickerStatus, "Live Ticker settings are unavailable in this build.", "error");
             }
             return;
         }
 
-        const formData = new FormData(liveDeskForm);
-        const label = formData.get("liveDeskLabel")?.toString().trim() || "";
-        const value = formData.get("liveDeskValue")?.toString().trim() || "";
+        const items = [
+            liveTicker1Input?.value || "",
+            liveTicker2Input?.value || "",
+            liveTicker3Input?.value || ""
+        ]
+            .map((value) => String(value || "").trim())
+            .filter(Boolean);
 
-        setLiveDeskSettings({ label, value });
-        if (liveDeskStatus) {
-            setStatus(liveDeskStatus, "Live Desk updated.", "success");
+        if (items.length < 3) {
+            if (liveTickerStatus) {
+                setStatus(liveTickerStatus, "Add all 3 Live items before saving.", "error");
+            }
+            return;
+        }
+
+        setLiveTickerItems(items.slice(0, 3));
+
+        if (liveTickerStatus) {
+            setStatus(liveTickerStatus, "Live Ticker updated.", "success");
         }
     });
+
+    if (clearLiveTickerButton) {
+        clearLiveTickerButton.addEventListener("click", () => {
+            if (typeof clearLiveTickerItems !== "function") {
+                if (liveTickerStatus) {
+                    setStatus(liveTickerStatus, "Live Ticker settings are unavailable in this build.", "error");
+                }
+                return;
+            }
+
+            clearLiveTickerItems();
+
+            if (liveTicker1Input) liveTicker1Input.value = "";
+            if (liveTicker2Input) liveTicker2Input.value = "";
+            if (liveTicker3Input) liveTicker3Input.value = "";
+
+            if (liveTickerStatus) {
+                setStatus(liveTickerStatus, "Live Ticker cleared (homepage uses default text).", "success");
+            }
+        });
+    }
+}
+
+if (archiveTickerForm) {
+    const existing = typeof getArchiveTickerItems === "function" ? getArchiveTickerItems() : [];
+
+    if (archiveTicker1Input) {
+        archiveTicker1Input.value = existing[0] || "";
+    }
+
+    if (archiveTicker2Input) {
+        archiveTicker2Input.value = existing[1] || "";
+    }
+
+    if (archiveTicker3Input) {
+        archiveTicker3Input.value = existing[2] || "";
+    }
+
+    archiveTickerForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        if (typeof setArchiveTickerItems !== "function") {
+            if (archiveTickerStatus) {
+                setStatus(archiveTickerStatus, "Archive Ticker settings are unavailable in this build.", "error");
+            }
+            return;
+        }
+
+        const items = [
+            archiveTicker1Input?.value || "",
+            archiveTicker2Input?.value || "",
+            archiveTicker3Input?.value || ""
+        ]
+            .map((value) => String(value || "").trim())
+            .filter(Boolean);
+
+        if (!items.length) {
+            if (archiveTickerStatus) {
+                setStatus(archiveTickerStatus, "Add at least 1 Browse item before saving.", "error");
+            }
+            return;
+        }
+
+        setArchiveTickerItems(items.slice(0, 3));
+
+        if (archiveTickerStatus) {
+            setStatus(archiveTickerStatus, "Archive Ticker updated.", "success");
+        }
+    });
+
+    if (clearArchiveTickerButton) {
+        clearArchiveTickerButton.addEventListener("click", () => {
+            if (typeof clearArchiveTickerItems !== "function") {
+                if (archiveTickerStatus) {
+                    setStatus(archiveTickerStatus, "Archive Ticker settings are unavailable in this build.", "error");
+                }
+                return;
+            }
+
+            clearArchiveTickerItems();
+
+            if (archiveTicker1Input) archiveTicker1Input.value = "";
+            if (archiveTicker2Input) archiveTicker2Input.value = "";
+            if (archiveTicker3Input) archiveTicker3Input.value = "";
+
+            if (archiveTickerStatus) {
+                setStatus(archiveTickerStatus, "Archive Ticker cleared (archive page uses default text).", "success");
+            }
+        });
+    }
 }
 
 syncRemoveImageButtons();

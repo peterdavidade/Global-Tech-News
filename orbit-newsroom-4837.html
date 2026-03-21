@@ -6,6 +6,7 @@
     <meta name="robots" content="noindex,nofollow">
     <title>Newsroom Console</title>
     <link rel="stylesheet" href="admin-console.css">
+    <script src="theme.js"></script>
 </head>
 <body>
     <div class="login-gate" id="loginGate">
@@ -16,6 +17,7 @@
             <label for="adminPasscode">Passcode</label>
             <input type="password" id="adminPasscode" name="adminPasscode" autocomplete="current-password" required>
             <button type="submit">Unlock Console</button>
+            <button type="button" class="ghost-action" data-theme-toggle>Dark mode</button>
             <p class="status-text" id="loginStatus"></p>
         </form>
     </div>
@@ -28,7 +30,8 @@
                 <p>Create, update, publish, archive, and monitor the news desk from one place.</p>
             </div>
             <div class="header-actions">
-                <a href="home.html" class="ghost-action">View Site</a>
+                <a href="index.html" class="ghost-action">View Site</a>
+                <button type="button" class="ghost-action" data-theme-toggle>Dark mode</button>
                 <button type="button" class="ghost-action" id="logoutButton">Log Out</button>
             </div>
         </header>
@@ -58,20 +61,52 @@
         <section class="admin-panel">
             <div class="section-heading">
                 <div>
-                    <span class="panel-kicker">Live Desk</span>
-                    <h2>Homepage header</h2>
+                    <span class="panel-kicker">Live Ticker</span>
+                    <h2>Homepage breaking strip</h2>
                 </div>
-                <p class="section-note">Controls the small Live Desk label + text shown in the homepage header.</p>
+                <p class="section-note">Sets 3 scrolling “Live:” items in the breaking strip at the very top of the homepage.</p>
             </div>
-            <form class="settings-form" id="liveDeskForm">
-                <label for="liveDeskLabel">Desk label</label>
-                <input type="text" id="liveDeskLabel" name="liveDeskLabel" maxlength="40" placeholder="Live Desk">
+            <form class="settings-form" id="liveTickerForm">
+                <label for="liveTicker1">Live item 1</label>
+                <input type="text" id="liveTicker1" name="liveTicker1" maxlength="140" placeholder="Ghana officials review education and infrastructure priorities...">
 
-                <label for="liveDeskValue">Desk text</label>
-                <input type="text" id="liveDeskValue" name="liveDeskValue" maxlength="80" placeholder="March 21, 2026">
+                <label for="liveTicker2">Live item 2</label>
+                <input type="text" id="liveTicker2" name="liveTicker2" maxlength="140" placeholder="Global markets watch inflation, energy costs, and tech earnings...">
 
-                <button type="submit" class="primary-action">Save Live Desk</button>
-                <p class="status-text" id="liveDeskStatus"></p>
+                <label for="liveTicker3">Live item 3</label>
+                <input type="text" id="liveTicker3" name="liveTicker3" maxlength="140" placeholder="Diplomatic talks continue as leaders respond to security tensions...">
+
+                <div class="form-split">
+                    <button type="submit" class="primary-action">Save Live Ticker</button>
+                    <button type="button" class="ghost-action" id="clearLiveTickerButton">Clear Live Ticker</button>
+                </div>
+                <p class="status-text" id="liveTickerStatus"></p>
+            </form>
+        </section>
+
+        <section class="admin-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="panel-kicker">Archive Ticker</span>
+                    <h2>Previous News strip</h2>
+                </div>
+                <p class="section-note">Controls the scrolling “Browse:” strip at the top of the Previous News (archive) page.</p>
+            </div>
+            <form class="settings-form" id="archiveTickerForm">
+                <label for="archiveTicker1">Browse item 1</label>
+                <input type="text" id="archiveTicker1" name="archiveTicker1" maxlength="140" placeholder="Previous Ghana and world updates collected for easy access.">
+
+                <label for="archiveTicker2">Browse item 2</label>
+                <input type="text" id="archiveTicker2" name="archiveTicker2" maxlength="140" placeholder="Switch tabs to explore World, Ghana, and Context archives.">
+
+                <label for="archiveTicker3">Browse item 3</label>
+                <input type="text" id="archiveTicker3" name="archiveTicker3" maxlength="140" placeholder="Use the admin console to archive older stories.">
+
+                <div class="form-split">
+                    <button type="submit" class="primary-action">Save Archive Ticker</button>
+                    <button type="button" class="ghost-action" id="clearArchiveTickerButton">Clear Archive Ticker</button>
+                </div>
+                <p class="status-text" id="archiveTickerStatus"></p>
             </form>
         </section>
 

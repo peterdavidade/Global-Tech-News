@@ -1,14 +1,27 @@
 :root {
     --bg: #eef3f8;
     --surface: #ffffff;
+    --surface-alt: #f7f9fc;
     --text: #10151c;
     --muted: #5c6877;
     --line: #d9e1eb;
+    --line-strong: #c1ccd8;
     --brand: #b5121b;
     --brand-dark: #8d0e15;
     --shadow: 0 24px 60px rgba(16, 21, 28, 0.08);
     --radius-lg: 28px;
     --radius-md: 18px;
+}
+
+html[data-theme="dark"] {
+    --bg: #0a0f15;
+    --surface: #101826;
+    --surface-alt: #0f1722;
+    --text: #e7edf6;
+    --muted: #a8b4c6;
+    --line: rgba(231, 237, 246, 0.14);
+    --line-strong: rgba(231, 237, 246, 0.22);
+    --shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
 }
 
 * {
@@ -25,6 +38,22 @@ body {
         radial-gradient(circle at top left, rgba(181, 18, 27, 0.14), transparent 22%),
         radial-gradient(circle at top right, rgba(10, 102, 194, 0.12), transparent 20%),
         linear-gradient(180deg, #f7f9fc 0%, #edf2f7 100%);
+}
+
+html[data-theme="dark"] body {
+    background:
+        radial-gradient(circle at 16% 10%, rgba(181, 18, 27, 0.22), transparent 36%),
+        radial-gradient(circle at 82% 12%, rgba(10, 102, 194, 0.18), transparent 34%),
+        linear-gradient(180deg, #070b10 0%, #0b1018 100%);
+}
+
+.story-top-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
 }
 
 .story-shell {
@@ -45,6 +74,30 @@ body {
     text-decoration: none;
     background: linear-gradient(135deg, var(--brand), var(--brand-dark));
     box-shadow: 0 14px 28px rgba(181, 18, 27, 0.2);
+}
+
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--text);
+    font-weight: 800;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+.theme-toggle svg {
+    width: 20px;
+    height: 20px;
+}
+
+.theme-toggle:hover {
+    transform: translateY(-1px);
 }
 
 .story-panel {
@@ -153,7 +206,7 @@ body {
     display: grid;
     gap: 16px;
     margin-top: 24px;
-    color: #253141;
+    color: var(--text);
     font-size: 1.04rem;
     line-height: 1.8;
 }
@@ -182,14 +235,14 @@ body {
     border-radius: 999px;
     color: var(--text);
     font-weight: 700;
-    background: #fff;
+    background: var(--surface);
     cursor: pointer;
     transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .story-action-button:hover {
     transform: translateY(-2px);
-    border-color: #c4d0dd;
+    border-color: var(--line-strong);
 }
 
 .story-action-button.is-active {
@@ -204,7 +257,7 @@ body {
     padding: 18px;
     border: 1px solid var(--line);
     border-radius: 22px;
-    background: #f9fbfd;
+    background: var(--surface-alt);
 }
 
 .story-comments-list {
@@ -215,7 +268,7 @@ body {
 .story-comment-item {
     padding: 14px 16px;
     border-radius: 18px;
-    background: #fff;
+    background: var(--surface);
     border: 1px solid var(--line);
 }
 
@@ -243,7 +296,7 @@ body {
     border: 1px solid var(--line);
     border-radius: 16px;
     color: var(--text);
-    background: #fff;
+    background: var(--surface);
     outline: none;
     resize: vertical;
 }
@@ -255,7 +308,7 @@ body {
 .story-comment-form input:focus,
 .story-comment-form textarea:focus,
 .share-link-input:focus {
-    border-color: #c4d0dd;
+    border-color: var(--line-strong);
     box-shadow: 0 0 0 4px rgba(10, 102, 194, 0.08);
 }
 

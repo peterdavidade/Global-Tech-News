@@ -6,7 +6,9 @@ const {
     trackVisit,
     formatDisplayDate,
     getMinutesAgo,
-    getLiveDeskSettings
+    getLiveDeskSettings,
+    getLiveTickerItems,
+    getArchiveTickerItems
 } = window.NewsroomStore || {};
 
 const feedContainer = document.getElementById("mainFeed");
@@ -18,6 +20,7 @@ const searchInput = document.getElementById("searchInput");
 const searchForm = document.getElementById("searchForm");
 const currentDate = document.getElementById("currentDate");
 const liveDeskLabel = document.getElementById("liveDeskLabel");
+const tickerTrack = document.getElementById("tickerTrack");
 const heroTimestamp = document.getElementById("heroTimestamp");
 const heroPanel = document.querySelector(".hero-panel");
 const heroChip = document.querySelector(".hero-topline .section-chip");
@@ -150,6 +153,50 @@ function escapeHtml(value) {
 
         return entities[character];
     });
+}
+
+function renderLiveTicker() {
+    if (!tickerTrack || !document.body.classList.contains("home-page") || typeof getLiveTickerItems !== "function") {
+        return;
+    }
+
+    const items = getLiveTickerItems();
+
+    if (!items.length) {
+        return;
+    }
+
+    const repeated = [...items, ...items];
+
+    tickerTrack.innerHTML = repeated
+        .map(
+            (text) => `
+                <span class="ticker-item"><strong>Live:</strong> ${escapeHtml(text)}</span>
+            `
+        )
+        .join("");
+}
+
+function renderArchiveTicker() {
+    if (!tickerTrack || !document.body.classList.contains("archive-page") || typeof getArchiveTickerItems !== "function") {
+        return;
+    }
+
+    const items = getArchiveTickerItems();
+
+    if (!items.length) {
+        return;
+    }
+
+    const repeated = [...items, ...items];
+
+    tickerTrack.innerHTML = repeated
+        .map(
+            (text) => `
+                <span class="ticker-item"><strong>Browse:</strong> ${escapeHtml(text)}</span>
+            `
+        )
+        .join("");
 }
 
 function getStoryUrl(post) {
@@ -328,7 +375,7 @@ function renderMainFeed(posts) {
         return;
     }
 
-    feedContainer.innerHTML = posts.slice(0, 8).map(createArticleCard).join("");
+    feedContainer.innerHTML = posts.slice(0, 4).map(createArticleCard).join("");
 }
 
 function postMatchesFilter(post, filter) {
@@ -403,7 +450,7 @@ function renderSidebarLists() {
     }
 
     if (latestUpdatesList) {
-        latestUpdatesList.innerHTML = allPublishedPosts.slice(0, 5).map(createStackItem).join("");
+        latestUpdatesList.innerHTML = allPublishedPosts.slice(0, 4).map(createStackItem).join("");
     }
 }
 
@@ -477,13 +524,7 @@ function getArchiveCollections() {
 
 function createArchiveLeadCard(post, tabKey) {
     if (!post) {
-        return `
-            <article class="archive-lead-card is-empty">
-                <span class="section-chip">Archive Desk</span>
-                <h3>No stories available yet</h3>
-                <p>This archive lane is empty right now. Add or archive more stories from the admin console to build it out.</p>
-            </article>
-        `;
+        return "";
     }
 
     const laneLabel = {
@@ -536,20 +577,9 @@ function renderArchiveHub() {
     archiveSummaryTitle.textContent = activeCollection.title;
     archiveSummaryCopy.textContent = activeCollection.copy;
     archiveStoryCount.textContent = String(posts.length);
-    archiveLead.innerHTML = createArchiveLeadCard(leadPost, activeArchiveTab);
+    archiveLead.innerHTML = leadPost ? createArchiveLeadCard(leadPost, activeArchiveTab) : "";
 
-    archiveFeed.innerHTML = supportingPosts.length
-        ? supportingPosts.map(createUpdateCard).join("")
-        : `
-            <article class="update-card archive-empty-card">
-                <div class="article-topline">
-                    <span class="article-tag">Archive Desk</span>
-                    <span class="article-time">Building up</span>
-                </div>
-                <h3>More stories will appear here as this archive grows.</h3>
-                <p>Switch tabs to explore another archive lane, or add more archived stories from the admin console.</p>
-            </article>
-        `;
+    archiveFeed.innerHTML = supportingPosts.length ? supportingPosts.map(createUpdateCard).join("") : "";
 }
 
 function renderAll() {
@@ -1037,6 +1067,14 @@ window.addEventListener("storage", (event) => {
                 year: "numeric"
             }).format(new Date());
     }
+
+    if (event.key === "daily-affairs.live-ticker.v1") {
+        renderLiveTicker();
+    }
+
+    if (event.key === "daily-affairs.archive-ticker.v1") {
+        renderArchiveTicker();
+    }
 });
 
 window.addEventListener("focus", () => {
@@ -1045,3 +1083,5 @@ window.addEventListener("focus", () => {
 
 renderAll();
 setupSectionObserver();
+renderLiveTicker();
+renderArchiveTicker();

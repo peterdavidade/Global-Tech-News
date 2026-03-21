@@ -14,6 +14,16 @@
     --radius-sm: 12px;
 }
 
+html[data-theme="dark"] {
+    --bg: #0a0f15;
+    --surface: #101826;
+    --surface-strong: #f3f6fb;
+    --text: #e7edf6;
+    --muted: #a8b4c6;
+    --line: rgba(231, 237, 246, 0.14);
+    --shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -28,6 +38,22 @@ body {
         radial-gradient(circle at top left, rgba(181, 18, 27, 0.12), transparent 24%),
         radial-gradient(circle at top right, rgba(10, 102, 194, 0.1), transparent 20%),
         linear-gradient(180deg, #f7f9fc 0%, #edf2f7 100%);
+}
+
+html[data-theme="dark"] body {
+    background:
+        radial-gradient(circle at 16% 10%, rgba(181, 18, 27, 0.22), transparent 36%),
+        radial-gradient(circle at 82% 12%, rgba(10, 102, 194, 0.18), transparent 34%),
+        linear-gradient(180deg, #070b10 0%, #0b1018 100%);
+}
+
+html[data-theme="dark"] .analytics-card,
+html[data-theme="dark"] .hero-assignment {
+    background: linear-gradient(180deg, rgba(16, 24, 38, 0.98), rgba(15, 23, 34, 0.94));
+}
+
+html[data-theme="dark"] .video-preview {
+    background: rgba(255, 255, 255, 0.04);
 }
 
 button,
@@ -102,7 +128,7 @@ button {
     padding: 13px 14px;
     border: 1px solid var(--line);
     border-radius: var(--radius-sm);
-    background: #fbfcfe;
+    background: var(--surface);
 }
 
 .login-card button,
@@ -156,7 +182,12 @@ button {
     border-radius: 999px;
     color: var(--text);
     text-decoration: none;
-    background: #fff;
+    background: var(--surface);
+}
+
+.ghost-action[data-theme-toggle] svg {
+    width: 18px;
+    height: 18px;
 }
 
 .admin-panel {
@@ -247,7 +278,11 @@ button {
     padding: 12px 14px;
     border: 1px solid var(--line);
     border-radius: var(--radius-sm);
-    background: #fbfcfe;
+    background: var(--surface);
+}
+
+html[data-theme="dark"] .checkbox-row {
+    background: rgba(255, 255, 255, 0.04);
 }
 
 .checkbox-row input {
@@ -312,7 +347,11 @@ button {
     padding: 16px;
     border: 1px solid var(--line);
     border-radius: var(--radius-md);
-    background: #fbfcfe;
+    background: var(--surface);
+}
+
+html[data-theme="dark"] .post-card {
+    background: rgba(255, 255, 255, 0.04);
 }
 
 .post-card-top {

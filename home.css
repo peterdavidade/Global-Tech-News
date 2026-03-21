@@ -13,9 +13,26 @@
     --success: #117a43;
     --warning: #ffb347;
     --shadow: 0 24px 60px rgba(18, 24, 33, 0.08);
+    --glass-surface: rgba(255, 255, 255, 0.92);
+    --glass-surface-strong: rgba(255, 255, 255, 0.94);
+    --ticker-duration: 10s;
     --radius-lg: 24px;
     --radius-md: 18px;
     --radius-sm: 12px;
+}
+
+html[data-theme="dark"] {
+    --bg: #0a0f15;
+    --surface: #101826;
+    --surface-alt: #0f1722;
+    --surface-strong: #f3f6fb;
+    --text: #e7edf6;
+    --muted: #a8b4c6;
+    --line: rgba(231, 237, 246, 0.14);
+    --line-strong: rgba(231, 237, 246, 0.22);
+    --shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+    --glass-surface: rgba(16, 24, 38, 0.88);
+    --glass-surface-strong: rgba(16, 24, 38, 0.92);
 }
 
 * {
@@ -37,6 +54,13 @@ body {
         linear-gradient(180deg, #f6f8fb 0%, #edf1f6 100%);
 }
 
+html[data-theme="dark"] body {
+    background:
+        radial-gradient(circle at 20% 10%, rgba(181, 18, 27, 0.22), transparent 34%),
+        radial-gradient(circle at 80% 10%, rgba(10, 102, 194, 0.18), transparent 34%),
+        linear-gradient(180deg, #070b10 0%, #0b1018 100%);
+}
+
 body.home-page {
     position: relative;
     overflow-x: hidden;
@@ -44,6 +68,13 @@ body.home-page {
         radial-gradient(circle at 14% 18%, rgba(181, 18, 27, 0.16), transparent 24%),
         radial-gradient(circle at 85% 10%, rgba(10, 102, 194, 0.12), transparent 20%),
         linear-gradient(180deg, #f7f9fc 0%, #eef3f8 48%, #e8edf4 100%);
+}
+
+html[data-theme="dark"] body.home-page {
+    background:
+        radial-gradient(circle at 18% 12%, rgba(181, 18, 27, 0.24), transparent 35%),
+        radial-gradient(circle at 85% 10%, rgba(10, 102, 194, 0.18), transparent 34%),
+        linear-gradient(180deg, #070b10 0%, #0b1018 55%, #070b10 100%);
 }
 
 body.home-page::before,
@@ -78,6 +109,21 @@ body.home-page::after {
     animation: driftGlowRight 22s ease-in-out infinite alternate;
 }
 
+html[data-theme="dark"] body.home-page::before {
+    background:
+        radial-gradient(circle at 35% 35%, rgba(181, 18, 27, 0.22), rgba(181, 18, 27, 0.06) 58%, transparent 72%);
+}
+
+html[data-theme="dark"] body.home-page::after {
+    background:
+        radial-gradient(circle at 50% 50%, rgba(10, 102, 194, 0.2), rgba(10, 102, 194, 0.06) 60%, transparent 74%);
+}
+
+html[data-theme="dark"] .read-more,
+html[data-theme="dark"] .search-form button,
+html[data-theme="dark"] .comment-form button {
+    color: #0f1722;
+}
 body.nav-open {
     overflow: hidden;
 }
@@ -293,11 +339,16 @@ body.home-page .site-footer {
 }
 
 .ticker-track {
-    display: inline-flex;
+    display: flex;
     gap: 48px;
     padding: 14px 22px;
     min-width: max-content;
-    animation: ticker-scroll 38s linear infinite;
+    width: max-content;
+    will-change: transform;
+    animation-name: ticker-scroll;
+    animation-duration: var(--ticker-duration, 10s);
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
 }
 
 .ticker-item {
@@ -369,6 +420,69 @@ body.home-page .site-footer {
     gap: 10px;
 }
 
+.archive-page .header-tools.archive-tools {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 10px;
+}
+
+.archive-page .archive-tools-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+}
+
+.archive-page .archive-tools-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.archive-page .header-tools.archive-tools .home-return-link {
+    width: auto;
+    padding: 10px 14px;
+    font-size: 0.92rem;
+    line-height: 1.1;
+}
+
+.archive-page .header-tools.archive-tools .header-date {
+    width: 100%;
+    min-width: 0;
+}
+
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
+    height: 54px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    color: var(--text);
+    font-weight: 800;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.theme-toggle svg {
+    width: 20px;
+    height: 20px;
+}
+
+.theme-toggle:hover {
+    transform: translateY(-1px);
+}
+
+.theme-toggle:focus-visible {
+    outline: 3px solid rgba(10, 102, 194, 0.3);
+    outline-offset: 2px;
+}
+
 /* Hamburger icon animation between menu and close states */
 .hamburger-button {
     display: inline-flex;
@@ -379,8 +493,14 @@ body.home-page .site-footer {
     width: 54px;
     height: 54px;
     padding: 0;
+    border: 1px solid var(--line);
     border-radius: var(--radius-md);
+    background: var(--surface);
     box-shadow: var(--shadow);
+}
+
+.hamburger-button:hover {
+    background: var(--surface-alt);
 }
 
 .hamburger-button span {
@@ -428,6 +548,20 @@ body.home-page .site-footer {
 
 .archive-page .header-date strong {
     font-size: 0.92rem;
+}
+
+/* Archive desk: keep both items inside the pill, with the value anchored to the bottom */
+.archive-page .header-date {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 6px;
+    min-height: 64px;
+}
+
+.archive-page .header-date strong {
+    margin-top: auto;
 }
 
 .subscribe-button,
@@ -751,7 +885,7 @@ body.home-page .site-footer {
     border-radius: 999px;
     color: var(--muted);
     font-weight: 800;
-    background: #fff;
+    background: var(--surface);
     cursor: pointer;
     transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
@@ -851,7 +985,7 @@ body.home-page .site-footer {
     border: 1px solid var(--line);
     border-radius: 20px;
     text-align: center;
-    background: #fff;
+    background: var(--surface);
 }
 
 .archive-summary-stat strong {
@@ -1012,7 +1146,7 @@ body.home-page .site-footer {
     border-radius: 999px;
     color: var(--text);
     font-weight: 700;
-    background: #fff;
+    background: var(--surface);
     cursor: pointer;
     transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
@@ -1034,7 +1168,7 @@ body.home-page .site-footer {
     padding: 16px;
     border: 1px solid var(--line);
     border-radius: 18px;
-    background: #fff;
+    background: var(--surface);
 }
 
 .comment-list {
@@ -1071,7 +1205,7 @@ body.home-page .site-footer {
     border: 1px solid var(--line);
     border-radius: 14px;
     color: var(--text);
-    background: #fff;
+    background: var(--surface);
     outline: none;
     resize: vertical;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -1353,7 +1487,7 @@ body.home-page .site-footer {
     border: 1px solid var(--line);
     border-radius: 14px;
     color: var(--text);
-    background: #fff;
+    background: var(--surface);
     outline: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -1586,10 +1720,10 @@ body.home-page .site-footer {
 
 @keyframes ticker-scroll {
     0% {
-        transform: translateX(0);
+        transform: translate3d(0, 0, 0);
     }
     100% {
-        transform: translateX(-50%);
+        transform: translate3d(-50%, 0, 0);
     }
 }
 
@@ -1749,7 +1883,7 @@ body.home-page .site-footer {
         padding: 8px 10px;
         border: 1px solid var(--line);
         border-radius: 18px;
-        background: rgba(255, 255, 255, 0.92);
+        background: var(--glass-surface);
         box-shadow: var(--shadow);
     }
 
@@ -1783,6 +1917,12 @@ body.home-page .site-footer {
         flex-shrink: 0;
     }
 
+    .theme-toggle {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+    }
+
     .archive-page .header-tools {
         max-width: min(88vw, 290px);
         padding: 7px 9px;
@@ -1791,6 +1931,14 @@ body.home-page .site-footer {
     .archive-page .header-date {
         padding: 9px 10px;
         gap: 6px;
+        flex-direction: column;
+        align-items: flex-start;
+        min-height: 56px;
+    }
+
+    .archive-page .header-date .mini-title,
+    .archive-page .header-date strong {
+        white-space: nowrap;
     }
 
     .archive-page .home-return-link {
@@ -1807,7 +1955,7 @@ body.home-page .site-footer {
         overflow-x: auto;
         border: 1px solid var(--line);
         border-radius: 18px;
-        background: rgba(255, 255, 255, 0.94);
+        background: var(--glass-surface-strong);
         box-shadow: var(--shadow);
         -ms-overflow-style: none;
         scrollbar-width: none;
@@ -1831,7 +1979,7 @@ body.home-page .site-footer {
         padding: 9px 12px;
         border: 1px solid var(--line);
         border-radius: 999px;
-        background: #fff;
+        background: var(--surface);
         white-space: nowrap;
         font-size: 0.86rem;
         line-height: 1.2;
@@ -2006,6 +2154,16 @@ body.home-page .site-footer {
         font-size: 0.8rem;
     }
 
+    .news-label {
+        padding: 10px 12px;
+        font-size: 0.72rem;
+    }
+
+    .ticker-track {
+        gap: 28px;
+        padding: 10px 12px;
+    }
+
     .hero-meta {
         font-size: 0.86rem;
     }
@@ -2029,13 +2187,25 @@ body.home-page .site-footer {
 }
 
 .news-header {
-    grid-template-columns: 1fr;
+    grid-template-columns: auto 1fr;
     margin-top: 8px;
-    border-radius: 24px;
+    border-radius: 999px;
 }
 
 .news-label {
-    text-align: center;
+    padding: 12px 14px;
+    font-size: 0.76rem;
+    text-align: left;
+}
+
+.ticker-track {
+    gap: 34px;
+    padding: 12px 16px;
+    animation-play-state: running;
+}
+
+.ticker-item {
+    font-size: 0.86rem;
 }
 
 .header-shell {
@@ -2059,7 +2229,7 @@ body.home-page .site-footer {
     padding: 8px;
     border: 1px solid var(--line);
     border-radius: 18px;
-    background: rgba(255, 255, 255, 0.92);
+    background: var(--glass-surface);
     box-shadow: var(--shadow);
 }
 
@@ -2068,11 +2238,16 @@ body.home-page .site-footer {
     padding: 8px;
 }
 
-.archive-page .header-tools {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-}
+    .archive-page .header-tools {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+    }
+
+    .archive-page .header-tools.archive-tools {
+        grid-template-columns: 1fr;
+        align-items: start;
+    }
 
 .header-date {
     flex: 1 1 auto;
@@ -2086,19 +2261,19 @@ body.home-page .site-footer {
 }
 
 .archive-page .header-date {
-    padding: 9px 10px;
+    padding: 12px 12px;
     gap: 6px;
-    display: grid;
-    justify-content: flex-start;
-}
-
-.archive-page .header-date .mini-title,
-.archive-page .header-date strong {
-    white-space: normal;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    min-height: 64px;
 }
 
 .archive-page .header-date strong {
     line-height: 1.15;
+    margin-top: auto;
 }
 
 .archive-page .home-return-link {
@@ -2131,7 +2306,7 @@ body.home-page .site-footer {
     overflow-x: auto;
     border: 1px solid var(--line);
     border-radius: 18px;
-    background: rgba(255, 255, 255, 0.94);
+    background: var(--glass-surface-strong);
     box-shadow: var(--shadow);
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -2155,7 +2330,7 @@ body.home-page .site-footer {
     padding: 9px 12px;
     border: 1px solid var(--line);
     border-radius: 999px;
-    background: #fff;
+    background: var(--surface);
     white-space: nowrap;
     font-size: 0.86rem;
     line-height: 1.2;
@@ -2340,6 +2515,12 @@ body.home-page .site-footer {
         grid-template-columns: none;
     }
 
+    .archive-page .header-tools.archive-tools {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
     .header-date {
         flex: 0 1 auto;
         display: grid;
@@ -2349,7 +2530,23 @@ body.home-page .site-footer {
     }
 
     .archive-page .header-date {
-        padding: 11px 14px;
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 6px;
+        min-height: 76px;
+        min-width: 172px;
+    }
+
+    .archive-page .header-date .mini-title,
+    .archive-page .header-date strong {
+        white-space: nowrap;
+    }
+
+    .archive-page .header-date strong {
+        margin-top: auto;
     }
 
     .hamburger-button {
@@ -2471,6 +2668,7 @@ body.home-page .site-footer {
 
     .archive-page .header-date {
         padding: 8px 9px;
+        min-height: 58px;
     }
 
     .header-date {

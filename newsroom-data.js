@@ -5,7 +5,9 @@
     const ADMIN_CONFIG_STORAGE_KEY = "daily-affairs.admin-config.v1";
     const ADMIN_SESSION_KEY = "daily-affairs.admin-session.v1";
     const LIVE_DESK_STORAGE_KEY = "daily-affairs.live-desk.v1";
-    const LIVE_POST_LIMIT = 8;
+    const LIVE_TICKER_STORAGE_KEY = "daily-affairs.live-ticker.v1";
+    const ARCHIVE_TICKER_STORAGE_KEY = "daily-affairs.archive-ticker.v1";
+    const LIVE_POST_LIMIT = 4;
     const LIVE_POST_WINDOW_MINUTES = 24 * 60;
 
     const MEDIA_DB_NAME = "daily-affairs.media.v1";
@@ -289,6 +291,50 @@
 
         localStorage.setItem(LIVE_DESK_STORAGE_KEY, JSON.stringify(normalized));
         return normalized;
+    }
+
+    function clearLiveDeskSettings() {
+        localStorage.removeItem(LIVE_DESK_STORAGE_KEY);
+    }
+
+    function getLiveTickerItems() {
+        const stored = safeParse(localStorage.getItem(LIVE_TICKER_STORAGE_KEY), null);
+
+        if (!Array.isArray(stored)) {
+            return [];
+        }
+
+        return stored.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 3);
+    }
+
+    function setLiveTickerItems(items) {
+        const normalized = Array.isArray(items) ? items.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 3) : [];
+        localStorage.setItem(LIVE_TICKER_STORAGE_KEY, JSON.stringify(normalized));
+        return normalized;
+    }
+
+    function clearLiveTickerItems() {
+        localStorage.removeItem(LIVE_TICKER_STORAGE_KEY);
+    }
+
+    function getArchiveTickerItems() {
+        const stored = safeParse(localStorage.getItem(ARCHIVE_TICKER_STORAGE_KEY), null);
+
+        if (!Array.isArray(stored)) {
+            return [];
+        }
+
+        return stored.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 3);
+    }
+
+    function setArchiveTickerItems(items) {
+        const normalized = Array.isArray(items) ? items.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 3) : [];
+        localStorage.setItem(ARCHIVE_TICKER_STORAGE_KEY, JSON.stringify(normalized));
+        return normalized;
+    }
+
+    function clearArchiveTickerItems() {
+        localStorage.removeItem(ARCHIVE_TICKER_STORAGE_KEY);
     }
 
     let mediaDbPromise = null;
@@ -661,6 +707,13 @@
         getMinutesAgo,
         getLiveDeskSettings,
         setLiveDeskSettings,
+        clearLiveDeskSettings,
+        getLiveTickerItems,
+        setLiveTickerItems,
+        clearLiveTickerItems,
+        getArchiveTickerItems,
+        setArchiveTickerItems,
+        clearArchiveTickerItems,
         saveMediaFile,
         getMediaBlob
     };
