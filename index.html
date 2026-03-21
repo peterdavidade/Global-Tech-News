@@ -137,7 +137,7 @@
                 <!-- date -->
                 <!-- date -->
                 <div class="header-date">
-                    <span class="mini-title">Live Desk</span>
+                    <span class="mini-title" id="liveDeskLabel">Live Desk</span>
                     <strong id="currentDate">March 20, 2026</strong>
                 </div>
             </div>
@@ -145,14 +145,14 @@
 
         <div class="nav-shell">
             <nav class="main-nav" aria-label="Primary">
-                <a href="#ghana-updates">Ghana News</a>
-                <a href="#global-updates">World News</a>
-                <a href="#mainFeed">Politics</a>
-                <a href="#mainFeed">Technology</a>
-                <a href="#mainFeed">Business</a>
-                <a href="#mainFeed">Education</a>
+                <a href="#mainFeed" data-filter-kind="region" data-filter-value="Ghana">Ghana News</a>
+                <a href="#mainFeed" data-filter-kind="region" data-filter-value="World">World News</a>
+                <a href="#mainFeed" data-filter-kind="category" data-filter-value="Politics">Politics</a>
+                <a href="#mainFeed" data-filter-kind="category" data-filter-value="Technology">Technology</a>
+                <a href="#mainFeed" data-filter-kind="category" data-filter-value="Business">Business</a>
+                <a href="#mainFeed" data-filter-kind="category" data-filter-value="Education">Education</a>
                 <a href="previous-news.html">Previous News</a>
-                <a href="#breakingHero">Breaking News</a>
+                <a href="#mainFeed" data-filter-kind="category" data-filter-value="Breaking News">Breaking News</a>
             </nav>
         </div>
     </header>
@@ -408,9 +408,32 @@
                         <h3>Stay connected</h3>
                     </div>
                     <div class="social-grid">
-                        <a href="#" class="social-link facebook">Facebook</a>
-                        <a href="#" class="social-link x">Whatsaap / X</a>
-                        <a href="#" class="social-link telegram">Telegram</a>
+                        <a href="#" class="social-link facebook">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M14 8.5V7.2c0-1.1.9-2 2-2H18V2h-2.7C12.9 2 11 3.9 11 6.3v2.2H8v3.5h3V22h3.6V12h3l.4-3.5H14Z" fill="currentColor"/>
+                            </svg>
+                            Facebook
+                        </a>
+                        <a href="#" class="social-link whatsapp">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M12 2a9 9 0 0 0-7.7 13.6L3 21l5.6-1.4A9 9 0 1 0 12 2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                                <path d="M9.4 8.5c.3-.6.6-.7 1-.7h.8c.2 0 .5 0 .7.6.2.6.8 2 .9 2.2.1.2.1.4 0 .6-.2.2-.3.5-.5.7-.2.2-.4.4-.2.7.2.4.8 1.4 1.7 2.2 1.2 1.1 2.2 1.5 2.5 1.6.3.1.5.1.7-.1.2-.2.8-.9 1-1.2.2-.3.4-.2.7-.1.3.1 2 1 2.3 1.1.3.2.5.2.6.3.1.1.1.7-.2 1.4-.3.7-1.7 1.4-2.4 1.5-.6.1-1.3.1-2.2-.2-.5-.2-1.2-.4-2.1-.9-3.7-1.9-5.7-5.9-5.9-6.2-.2-.3-1.5-2-.9-3.9Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            WhatsApp
+                        </a>
+                        <a href="#" class="social-link x">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M5 4h4.3l4.2 5.6L18.8 4H21l-6.6 7.7L21 20h-4.3l-4.6-6.1L6.8 20H4.6l7.1-8.3L5 4Z" fill="currentColor"/>
+                            </svg>
+                            X
+                        </a>
+                        <a href="#" class="social-link telegram">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M20.5 4.5 3.8 11.2c-.9.4-.9 1.6.1 1.9l4.1 1.3 1.6 5.1c.2.7 1.1.8 1.5.3l2.4-2.9 4.7 3.4c.6.4 1.4.1 1.5-.6l2.8-14c.1-.8-.7-1.5-1.5-1.2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                                <path d="M8 14.4 19.2 6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                            </svg>
+                            Telegram
+                        </a>
                         
                     </div>
                 </section>
@@ -574,11 +597,23 @@
 
         <div class="footer-bottom">
             <div class="footer-links">
-                
-                <a href="#">Whatsaap</a>
-                <a href="#" target="_blank">Telegram</a>
-                
-           
+                <a href="#" aria-label="Chat with us on WhatsApp">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 2a9 9 0 0 0-7.7 13.6L3 21l5.6-1.4A9 9 0 1 0 12 2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                        <path d="M9.4 8.5c.3-.6.6-.7 1-.7h.8c.2 0 .5 0 .7.6.2.6.8 2 .9 2.2.1.2.1.4 0 .6-.2.2-.3.5-.5.7-.2.2-.4.4-.2.7.2.4.8 1.4 1.7 2.2 1.2 1.1 2.2 1.5 2.5 1.6.3.1.5.1.7-.1.2-.2.8-.9 1-1.2.2-.3.4-.2.7-.1.3.1 2 1 2.3 1.1.3.2.5.2.6.3.1.1.1.7-.2 1.4-.3.7-1.7 1.4-2.4 1.5-.6.1-1.3.1-2.2-.2-.5-.2-1.2-.4-2.1-.9-3.7-1.9-5.7-5.9-5.9-6.2-.2-.3-1.5-2-.9-3.9Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    WhatsApp
+                </a>
+                <a href="#" target="_blank" rel="noreferrer" aria-label="Join us on Telegram">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M20.5 4.5 3.8 11.2c-.9.4-.9 1.6.1 1.9l4.1 1.3 1.6 5.1c.2.7 1.1.8 1.5.3l2.4-2.9 4.7 3.4c.6.4 1.4.1 1.5-.6l2.8-14c.1-.8-.7-1.5-1.5-1.2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                        <path d="M8 14.4 19.2 6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                    </svg>
+                    Telegram
+                </a>
+            </div>
+            <p class="footer-copy">&copy; 2026 Global 24 News. Designed and created by Peter David Ade.</p>
+        </div>
     </footer>
 
     <script src="newsroom-data.js"></script>

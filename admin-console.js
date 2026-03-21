@@ -12,7 +12,11 @@ const {
     closeAdminSession,
     hasAdminSession,
     setAdminPasscode,
-    formatDisplayDate
+    formatDisplayDate,
+    getLiveDeskSettings,
+    setLiveDeskSettings,
+    saveMediaFile,
+    getMediaBlob
 } = window.NewsroomStore || {};
 
 const loginGate = document.getElementById("loginGate");
@@ -30,14 +34,63 @@ const postsList = document.getElementById("postsList");
 const resetEditorButton = document.getElementById("resetEditorButton");
 const settingsForm = document.getElementById("settingsForm");
 const settingsStatus = document.getElementById("settingsStatus");
+const liveDeskForm = document.getElementById("liveDeskForm");
+const liveDeskLabelInput = document.getElementById("liveDeskLabel");
+const liveDeskValueInput = document.getElementById("liveDeskValue");
+const liveDeskStatus = document.getElementById("liveDeskStatus");
 const imageFileInput = document.getElementById("postImageFile");
 const imageFileInput2 = document.getElementById("postImageFile2");
 const imageFileInput3 = document.getElementById("postImageFile3");
 const imagePreview = document.getElementById("imagePreview");
 const imagePreview2 = document.getElementById("imagePreview2");
 const imagePreview3 = document.getElementById("imagePreview3");
+const removeImage1Button = document.getElementById("removeImage1");
+const removeImage2Button = document.getElementById("removeImage2");
+const removeImage3Button = document.getElementById("removeImage3");
+const videoFileInput = document.getElementById("postVideoFile");
+const videoFileInput2 = document.getElementById("postVideoFile2");
+const videoFileInput3 = document.getElementById("postVideoFile3");
+const videoPreview = document.getElementById("videoPreview");
+const videoPreview2 = document.getElementById("videoPreview2");
+const videoPreview3 = document.getElementById("videoPreview3");
 
 let pendingImageDataUrls = [];
+let pendingVideoIds = [];
+let pendingVideoFiles = [];
+let pendingVideoPreviewUrls = [];
+
+function syncRemoveImageButtons() {
+    const buttons = [removeImage1Button, removeImage2Button, removeImage3Button];
+
+    buttons.forEach((button, index) => {
+        if (!button) {
+            return;
+        }
+
+        const hasImage = Boolean(pendingImageDataUrls[index]);
+        button.disabled = !hasImage;
+    });
+}
+
+function removeImageSlot(slotIndex) {
+    pendingImageDataUrls[slotIndex] = "";
+
+    const previews = [imagePreview, imagePreview2, imagePreview3];
+    const inputs = [imageFileInput, imageFileInput2, imageFileInput3];
+    const preview = previews[slotIndex];
+    const input = inputs[slotIndex];
+
+    if (preview) {
+        preview.hidden = true;
+        preview.removeAttribute("src");
+    }
+
+    if (input) {
+        input.value = "";
+    }
+
+    syncRemoveImageButtons();
+}
 
 function setStatus(element, message, tone) {
     element.textContent = message;
@@ -57,7 +110,20 @@ function resetEditor() {
     postForm.reset();
     postIdInput.value = "";
     pendingImageDataUrls = [];
+    pendingVideoIds = [];
+    pendingVideoFiles = [];
+    pendingVideoPreviewUrls.forEach((url) => {
+        if (url) {
+            URL.revokeObjectURL(url);
+        }
+    });
+    pendingVideoPreviewUrls = [];
     [imagePreview, imagePreview2, imagePreview3].forEach((preview) => {
+        preview.hidden = true;
+        preview.removeAttribute("src");
+    });
+    syncRemoveImageButtons();
+    [videoPreview, videoPreview2, videoPreview3].forEach((preview) => {
         preview.hidden = true;
         preview.removeAttribute("src");
     });
@@ -151,6 +217,9 @@ function populateEditor(post) {
     postForm.featured.checked = Boolean(post.featured);
     postForm.trending.checked = Boolean(post.trending);
     pendingImageDataUrls = Array.isArray(post.galleryImages) && post.galleryImages.length ? [...post.galleryImages] : [post.imageSrc];
+    syncRemoveImageButtons();
+    pendingVideoIds = Array.isArray(post.videoIds) ? post.videoIds.map((id) => String(id || "")).slice(0, 3) : [];
+    pendingVideoFiles = [];
     [imagePreview, imagePreview2, imagePreview3].forEach((preview, index) => {
         const imageSrc = pendingImageDataUrls[index];
         preview.hidden = !imageSrc;
@@ -160,6 +229,8 @@ function populateEditor(post) {
             preview.removeAttribute("src");
         }
     });
+
+    hydrateVideoPreviews();
     editorTitle.textContent = "Edit post";
     setStatus(editorStatus, `Editing "${post.title}"`, "success");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -179,6 +250,7 @@ async function updateImageSlot(fileInput, previewElement, slotIndex) {
 
     if (!file) {
         pendingImageDataUrls[slotIndex] = pendingImageDataUrls[slotIndex] || "";
+        syncRemoveImageButtons();
         return;
     }
 
@@ -186,6 +258,7 @@ async function updateImageSlot(fileInput, previewElement, slotIndex) {
     pendingImageDataUrls[slotIndex] = imageDataUrl;
     previewElement.src = imageDataUrl;
     previewElement.hidden = false;
+    syncRemoveImageButtons();
 }
 
 async function handleAllImagePreviews() {
@@ -194,6 +267,91 @@ async function handleAllImagePreviews() {
         updateImageSlot(imageFileInput2, imagePreview2, 1),
         updateImageSlot(imageFileInput3, imagePreview3, 2)
     ]);
+}
+
+async function hydrateVideoPreviews() {
+    const slots = [
+        { preview: videoPreview, slotIndex: 0 },
+        { preview: videoPreview2, slotIndex: 1 },
+        { preview: videoPreview3, slotIndex: 2 }
+    ];
+
+    if (typeof getMediaBlob !== "function") {
+        return;
+    }
+
+    await Promise.all(
+        slots.map(async ({ preview, slotIndex }) => {
+            if (!preview) {
+                return;
+            }
+
+            const mediaId = pendingVideoIds[slotIndex];
+
+            if (!mediaId) {
+                preview.hidden = true;
+                preview.removeAttribute("src");
+                return;
+            }
+
+            try {
+                const blob = await getMediaBlob(mediaId);
+
+                if (!blob) {
+                    preview.hidden = true;
+                    preview.removeAttribute("src");
+                    return;
+                }
+
+                if (pendingVideoPreviewUrls[slotIndex]) {
+                    URL.revokeObjectURL(pendingVideoPreviewUrls[slotIndex]);
+                }
+
+                const url = URL.createObjectURL(blob);
+                pendingVideoPreviewUrls[slotIndex] = url;
+                preview.src = url;
+                preview.hidden = false;
+            } catch (error) {
+                preview.hidden = true;
+                preview.removeAttribute("src");
+            }
+        })
+    );
+}
+
+function updateVideoPreviewFromFile(file, previewElement, slotIndex) {
+    if (!file || !previewElement) {
+        return;
+    }
+
+    if (pendingVideoPreviewUrls[slotIndex]) {
+        URL.revokeObjectURL(pendingVideoPreviewUrls[slotIndex]);
+    }
+
+    const url = URL.createObjectURL(file);
+    pendingVideoPreviewUrls[slotIndex] = url;
+    previewElement.src = url;
+    previewElement.hidden = false;
+}
+
+async function persistPendingVideos() {
+    if (typeof saveMediaFile !== "function") {
+        return pendingVideoIds.filter(Boolean).slice(0, 3);
+    }
+
+    for (let i = 0; i < 3; i += 1) {
+        const file = pendingVideoFiles[i];
+
+        if (!file) {
+            continue;
+        }
+
+        const mediaId = await saveMediaFile(file);
+        pendingVideoIds[i] = mediaId;
+        pendingVideoFiles[i] = null;
+    }
+
+    return pendingVideoIds.filter(Boolean).slice(0, 3);
 }
 
 function getPostPayload() {
@@ -209,6 +367,7 @@ function getPostPayload() {
         imageAlt: formData.get("imageAlt")?.toString().trim(),
         imageSrc: pendingImageDataUrls.find(Boolean) || "./images/news-world.jpg",
         galleryImages: pendingImageDataUrls.filter(Boolean).slice(0, 3),
+        videoIds: pendingVideoIds.filter(Boolean).slice(0, 3),
         featured: Boolean(formData.get("featured")),
         trending: Boolean(formData.get("trending"))
     };
@@ -259,6 +418,16 @@ if (imageFileInput) {
     });
 }
 
+[removeImage1Button, removeImage2Button, removeImage3Button].forEach((button, index) => {
+    if (!button) {
+        return;
+    }
+
+    button.addEventListener("click", () => {
+        removeImageSlot(index);
+    });
+});
+
 [imageFileInput2, imageFileInput3].forEach((input, index) => {
     if (!input) {
         return;
@@ -287,6 +456,13 @@ if (postForm) {
             return;
         }
 
+        try {
+            pendingVideoIds = await persistPendingVideos();
+        } catch (error) {
+            setStatus(editorStatus, "Video upload failed. Try a smaller file or another format.", "error");
+            return;
+        }
+
         const payload = getPostPayload();
 
         if (!validatePayload(payload)) {
@@ -308,6 +484,33 @@ if (postForm) {
         resetEditor();
     });
 }
+
+if (videoFileInput) {
+    videoFileInput.addEventListener("change", () => {
+        const file = videoFileInput.files?.[0];
+        pendingVideoFiles[0] = file || null;
+        if (file) {
+            updateVideoPreviewFromFile(file, videoPreview, 0);
+        }
+    });
+}
+
+[videoFileInput2, videoFileInput3].forEach((input, index) => {
+    if (!input) {
+        return;
+    }
+
+    const preview = index === 0 ? videoPreview2 : videoPreview3;
+    const slotIndex = index === 0 ? 1 : 2;
+
+    input.addEventListener("change", () => {
+        const file = input.files?.[0];
+        pendingVideoFiles[slotIndex] = file || null;
+        if (file) {
+            updateVideoPreviewFromFile(file, preview, slotIndex);
+        }
+    });
+});
 
 if (postsList) {
     postsList.addEventListener("click", (event) => {
@@ -390,6 +593,40 @@ if (settingsForm) {
         setStatus(settingsStatus, "Passcode updated successfully.", "success");
     });
 }
+
+if (liveDeskForm) {
+    const existing = typeof getLiveDeskSettings === "function" ? getLiveDeskSettings() : null;
+
+    if (existing && liveDeskLabelInput) {
+        liveDeskLabelInput.value = existing.label || "";
+    }
+
+    if (existing && liveDeskValueInput) {
+        liveDeskValueInput.value = existing.value || "";
+    }
+
+    liveDeskForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        if (typeof setLiveDeskSettings !== "function") {
+            if (liveDeskStatus) {
+                setStatus(liveDeskStatus, "Live Desk settings are unavailable in this build.", "error");
+            }
+            return;
+        }
+
+        const formData = new FormData(liveDeskForm);
+        const label = formData.get("liveDeskLabel")?.toString().trim() || "";
+        const value = formData.get("liveDeskValue")?.toString().trim() || "";
+
+        setLiveDeskSettings({ label, value });
+        if (liveDeskStatus) {
+            setStatus(liveDeskStatus, "Live Desk updated.", "success");
+        }
+    });
+}
+
+syncRemoveImageButtons();
 
 if (typeof hasAdminSession === "function" && hasAdminSession()) {
     setConsoleVisibility(true);

@@ -4,8 +4,13 @@
     const VISITOR_STORAGE_KEY = "daily-affairs.visitor-id.v1";
     const ADMIN_CONFIG_STORAGE_KEY = "daily-affairs.admin-config.v1";
     const ADMIN_SESSION_KEY = "daily-affairs.admin-session.v1";
+    const LIVE_DESK_STORAGE_KEY = "daily-affairs.live-desk.v1";
     const LIVE_POST_LIMIT = 8;
     const LIVE_POST_WINDOW_MINUTES = 24 * 60;
+
+    const MEDIA_DB_NAME = "daily-affairs.media.v1";
+    const MEDIA_DB_VERSION = 1;
+    const MEDIA_STORE_NAME = "media";
 
     const DEFAULT_ADMIN_CONFIG = {
         passcode: "DailyAffairs-Desk-2026"
@@ -238,6 +243,9 @@
             ? post.galleryImages.map((image) => String(image || "").trim()).filter(Boolean).slice(0, 3)
             : [];
         const finalGalleryImages = galleryImages.length ? galleryImages : [fallbackImage];
+        const videoIds = Array.isArray(post.videoIds)
+            ? post.videoIds.map((id) => String(id || "").trim()).filter(Boolean).slice(0, 3)
+            : [];
 
         return {
             id: Number(post.id),
@@ -253,10 +261,114 @@
             imageAlt: String(post.imageAlt || title || "News story image").trim(),
             imageSrc: fallbackImage,
             galleryImages: finalGalleryImages,
+            videoIds,
             status: post.status === "archived" ? "archived" : "published",
             publishedAt,
             updatedAt: post.updatedAt ? formatIsoDate(post.updatedAt) : publishedAt
         };
+    }
+
+    function getLiveDeskSettings() {
+        const stored = safeParse(localStorage.getItem(LIVE_DESK_STORAGE_KEY), null);
+
+        if (!stored || typeof stored !== "object") {
+            return null;
+        }
+
+        return {
+            label: String(stored.label || "").trim(),
+            value: String(stored.value || "").trim()
+        };
+    }
+
+    function setLiveDeskSettings(settings) {
+        const normalized = {
+            label: String(settings?.label || "").trim(),
+            value: String(settings?.value || "").trim()
+        };
+
+        localStorage.setItem(LIVE_DESK_STORAGE_KEY, JSON.stringify(normalized));
+        return normalized;
+    }
+
+    let mediaDbPromise = null;
+
+    function openMediaDb() {
+        if (!("indexedDB" in window)) {
+            return Promise.reject(new Error("IndexedDB is unavailable."));
+        }
+
+        if (mediaDbPromise) {
+            return mediaDbPromise;
+        }
+
+        mediaDbPromise = new Promise((resolve, reject) => {
+            const request = window.indexedDB.open(MEDIA_DB_NAME, MEDIA_DB_VERSION);
+
+            request.onupgradeneeded = () => {
+                const db = request.result;
+
+                if (!db.objectStoreNames.contains(MEDIA_STORE_NAME)) {
+                    db.createObjectStore(MEDIA_STORE_NAME, { keyPath: "id" });
+                }
+            };
+
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error || new Error("Unable to open media database."));
+        });
+
+        return mediaDbPromise;
+    }
+
+    function saveMediaFile(file) {
+        if (!file) {
+            return Promise.reject(new Error("No media file provided."));
+        }
+
+        const id = `media_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+
+        return openMediaDb().then(
+            (db) =>
+                new Promise((resolve, reject) => {
+                    const transaction = db.transaction(MEDIA_STORE_NAME, "readwrite");
+                    const store = transaction.objectStore(MEDIA_STORE_NAME);
+                    store.put({
+                        id,
+                        blob: file,
+                        name: file.name || "",
+                        type: file.type || "",
+                        createdAt: getNowIso()
+                    });
+
+                    transaction.oncomplete = () => resolve(id);
+                    transaction.onerror = () => reject(transaction.error || new Error("Unable to save media."));
+                    transaction.onabort = () => reject(transaction.error || new Error("Unable to save media."));
+                })
+        );
+    }
+
+    function getMediaBlob(mediaId) {
+        const id = String(mediaId || "").trim();
+
+        if (!id) {
+            return Promise.resolve(null);
+        }
+
+        return openMediaDb().then(
+            (db) =>
+                new Promise((resolve, reject) => {
+                    const transaction = db.transaction(MEDIA_STORE_NAME, "readonly");
+                    const store = transaction.objectStore(MEDIA_STORE_NAME);
+                    const request = store.get(id);
+
+                    request.onsuccess = () => {
+                        const record = request.result;
+                        resolve(record?.blob || null);
+                    };
+
+                    request.onerror = () => reject(request.error || new Error("Unable to read media."));
+                })
+        );
     }
 
     function getPosts() {
@@ -354,12 +466,15 @@
         }
 
         const existingPost = posts[postIndex];
+        const nextStatus = postInput.status ? String(postInput.status) : existingPost.status;
+        const shouldRefreshPublishDate = existingPost.status === "archived" && nextStatus === "published";
+        const nextPublishedAt = postInput.publishedAt || (shouldRefreshPublishDate ? getNowIso() : existingPost.publishedAt);
         const updatedPost = normalizePost({
             ...existingPost,
             ...postInput,
             id: existingPost.id,
             slug: postInput.slug || slugify(postInput.title || existingPost.title),
-            publishedAt: postInput.publishedAt || existingPost.publishedAt,
+            publishedAt: nextPublishedAt,
             updatedAt: getNowIso()
         });
 
@@ -543,6 +658,10 @@
         trackVisit,
         summarizeVisits,
         formatDisplayDate,
-        getMinutesAgo
+        getMinutesAgo,
+        getLiveDeskSettings,
+        setLiveDeskSettings,
+        saveMediaFile,
+        getMediaBlob
     };
 })();

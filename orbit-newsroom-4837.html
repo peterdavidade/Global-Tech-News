@@ -55,6 +55,26 @@
             <div class="hero-assignment" id="heroAssignment"></div>
         </section>
 
+        <section class="admin-panel">
+            <div class="section-heading">
+                <div>
+                    <span class="panel-kicker">Live Desk</span>
+                    <h2>Homepage header</h2>
+                </div>
+                <p class="section-note">Controls the small Live Desk label + text shown in the homepage header.</p>
+            </div>
+            <form class="settings-form" id="liveDeskForm">
+                <label for="liveDeskLabel">Desk label</label>
+                <input type="text" id="liveDeskLabel" name="liveDeskLabel" maxlength="40" placeholder="Live Desk">
+
+                <label for="liveDeskValue">Desk text</label>
+                <input type="text" id="liveDeskValue" name="liveDeskValue" maxlength="80" placeholder="March 21, 2026">
+
+                <button type="submit" class="primary-action">Save Live Desk</button>
+                <p class="status-text" id="liveDeskStatus"></p>
+            </form>
+        </section>
+
         <section class="admin-grid">
             <section class="admin-panel">
                 <div class="section-heading">
@@ -134,6 +154,23 @@
                         <img class="image-preview" id="imagePreview" alt="Selected post preview 1" hidden>
                         <img class="image-preview" id="imagePreview2" alt="Selected post preview 2" hidden>
                         <img class="image-preview" id="imagePreview3" alt="Selected post preview 3" hidden>
+                    </div>
+                    <div class="media-remove-row">
+                        <button type="button" class="ghost-action" id="removeImage1">Remove image 1</button>
+                        <button type="button" class="ghost-action" id="removeImage2">Remove image 2</button>
+                        <button type="button" class="ghost-action" id="removeImage3">Remove image 3</button>
+                    </div>
+
+                    <label for="postVideoFile">Upload video (optional)</label>
+                    <input type="file" id="postVideoFile" name="videoFile" accept="video/*">
+                    <label for="postVideoFile2">Optional second video</label>
+                    <input type="file" id="postVideoFile2" name="videoFile2" accept="video/*">
+                    <label for="postVideoFile3">Optional third video</label>
+                    <input type="file" id="postVideoFile3" name="videoFile3" accept="video/*">
+                    <div class="video-preview-grid" id="videoPreviewGrid">
+                        <video class="video-preview" id="videoPreview" controls muted playsinline hidden></video>
+                        <video class="video-preview" id="videoPreview2" controls muted playsinline hidden></video>
+                        <video class="video-preview" id="videoPreview3" controls muted playsinline hidden></video>
                     </div>
 
                     <div class="form-split checks">

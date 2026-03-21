@@ -21,7 +21,7 @@
         </div>
 
         <nav class="sidebar-menu" aria-label="Primary sidebar">
-            <a href="home.html#top" class="sidebar-link">
+            <a href="index.html#top" class="sidebar-link">
                 <span class="sidebar-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none">
                         <path d="M4 11.5 12 5l8 6.5V20H4v-8.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
@@ -30,7 +30,7 @@
                 </span>
                 <span>Home</span>
             </a>
-            <a href="home.html#latest-feed" class="sidebar-link">
+            <a href="index.html#latest-feed" class="sidebar-link">
                 <span class="sidebar-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none">
                         <path d="M5 6.5h14M5 12h14M5 17.5h9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
@@ -38,7 +38,7 @@
                 </span>
                 <span>Latest Feed</span>
             </a>
-            <a href="home.html#global-updates" class="sidebar-link">
+            <a href="index.html#global-updates" class="sidebar-link">
                 <span class="sidebar-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none">
                         <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.7"/>
@@ -47,7 +47,7 @@
                 </span>
                 <span>World News</span>
             </a>
-            <a href="home.html#ghana-updates" class="sidebar-link">
+            <a href="index.html#ghana-updates" class="sidebar-link">
                 <span class="sidebar-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none">
                         <path d="M12 3.5 14.5 8.5 20 9.3l-4 3.9.9 5.5L12 16l-4.9 2.7.9-5.5-4-3.9 5.5-.8L12 3.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
@@ -79,7 +79,7 @@
 
         <div class="header-shell">
             <div class="brand-block">
-                <a href="home.html" class="brand-link" aria-label="Return to homepage">
+                <a href="index.html" class="brand-link" aria-label="Return to homepage">
                     <span class="brand-kicker">Archive</span>
                     <span class="brand-name">Previous News</span>
                 </a>
@@ -87,7 +87,7 @@
             </div>
 
             <div class="header-tools">
-                <a href="home.html" class="primary-button home-return-link">Home Page</a>
+                <a href="index.html" class="primary-button home-return-link">Home Page</a>
                 <button
                     type="button"
                     class="hamburger-button"
@@ -109,63 +109,44 @@
 
         <div class="nav-shell">
             <nav class="main-nav" aria-label="Archive navigation">
-                <a href="home.html">Back To Home</a>
-                <a href="#archive-world">World Archive</a>
-                <a href="#archive-ghana">Ghana Archive</a>
-                <a href="#archive-context">Context Stories</a>
+                <a href="index.html">Back To Home</a>
+                <a href="#archive-hub" data-archive-tab="world">World Archive</a>
+                <a href="#archive-hub" data-archive-tab="ghana">Ghana Archive</a>
+                <a href="#archive-hub" data-archive-tab="context">Context Stories</a>
             </nav>
         </div>
     </header>
 
     <main class="page-shell">
-        <section class="updates-section">
+        <section class="updates-section archive-hub" id="archive-hub">
             <div class="section-head">
                 <div>
                     <span class="section-chip">Archive Overview</span>
-                    <h2>Previous stories in one place</h2>
+                    <h2>Explore the archive by desk</h2>
                 </div>
-                <p class="section-copy">Use this page to keep older but still relevant stories available without crowding the homepage.</p>
+                <p class="section-copy">Browse previous international updates, Ghana coverage, and deeper context stories without crowding the homepage.</p>
             </div>
-            <div class="updates-grid archive-grid">
-                <article class="update-card" id="archive-world">
-                    <div class="update-visual">
-                        <img src="./images/news-technology.jpg" alt="A technology interface representing AI and digital regulation">
-                    </div>
-                    <div class="article-topline">
-                        <span class="article-tag">Technology</span>
-                        <span class="article-time">Yesterday</span>
-                    </div>
-                    <h3>Technology regulators examine new platform rules around privacy and AI-generated content</h3>
-                    <p>The debate includes transparency requirements, consumer protections, and the responsibilities of large digital platforms.</p>
-                    <a href="#" class="read-more">Read More</a>
-                </article>
-
-                <article class="update-card" id="archive-ghana">
-                    <div class="update-visual">
-                        <img src="./images/news-research.jpg" alt="University researchers collaborating in a laboratory or campus setting">
-                    </div>
-                    <div class="article-topline">
-                        <span class="article-tag">Education</span>
-                        <span class="article-time">Yesterday</span>
-                    </div>
-                    <h3>Universities expand research partnerships as innovation funding grows in West Africa</h3>
-                    <p>Education and technology institutions are forming new collaborations aimed at skills development and applied research.</p>
-                    <a href="#" class="read-more">Read More</a>
-                </article>
-
-                <article class="update-card" id="archive-context">
-                    <div class="update-visual">
-                        <img src="./images/news-accra-business.jpg" alt="Business owners discussing market trends in Accra">
-                    </div>
-                    <div class="article-topline">
-                        <span class="article-tag">Business</span>
-                        <span class="article-time">2 days ago</span>
-                    </div>
-                    <h3>Businesses in Accra adjust hiring and investment plans as consumer demand shifts</h3>
-                    <p>Company leaders are focusing on cost discipline, expansion strategy, and digital operations as market conditions evolve.</p>
-                    <a href="#" class="read-more">Read More</a>
-                </article>
+            <div class="archive-tab-row" aria-label="Archive categories">
+                <button type="button" class="archive-tab is-active" data-archive-tab-button="world">World & International</button>
+                <button type="button" class="archive-tab" data-archive-tab-button="ghana">Ghana & Politics</button>
+                <button type="button" class="archive-tab" data-archive-tab-button="context">Context Stories</button>
             </div>
+
+            <div class="archive-spotlight" id="archiveLead"></div>
+
+            <div class="archive-summary-bar">
+                <div class="archive-summary-copy">
+                    <span class="section-chip">Archive Filter</span>
+                    <h3 id="archiveSummaryTitle">World & International Archive</h3>
+                    <p id="archiveSummaryCopy">Archived global and international stories collected for background and follow-up reading.</p>
+                </div>
+                <div class="archive-summary-stat">
+                    <span class="mini-title">Stories Available</span>
+                    <strong id="archiveStoryCount">0</strong>
+                </div>
+            </div>
+
+            <div class="updates-grid archive-grid" id="archiveFeed"></div>
         </section>
     </main>
 
@@ -176,10 +157,29 @@
                 <p class="footer-note">Archive page for earlier current affairs coverage from Ghana and around the world.</p>
             </div>
             <div class="footer-contact">
-                <p><strong>Back:</strong> <a href="home.html">Return to homepage</a></p>
+                <p><strong>Back:</strong> <a href="index.html">Return to homepage</a></p>
                 <p><strong>Email:</strong> GlobalCurrentAffairs.com</p>
                 <p><strong>Location:</strong> Tamale, Ghana</p>
             </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="footer-links">
+                <a href="#" aria-label="Chat with us on WhatsApp">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 2a9 9 0 0 0-7.7 13.6L3 21l5.6-1.4A9 9 0 1 0 12 2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                        <path d="M9.4 8.5c.3-.6.6-.7 1-.7h.8c.2 0 .5 0 .7.6.2.6.8 2 .9 2.2.1.2.1.4 0 .6-.2.2-.3.5-.5.7-.2.2-.4.4-.2.7.2.4.8 1.4 1.7 2.2 1.2 1.1 2.2 1.5 2.5 1.6.3.1.5.1.7-.1.2-.2.8-.9 1-1.2.2-.3.4-.2.7-.1.3.1 2 1 2.3 1.1.3.2.5.2.6.3.1.1.1.7-.2 1.4-.3.7-1.7 1.4-2.4 1.5-.6.1-1.3.1-2.2-.2-.5-.2-1.2-.4-2.1-.9-3.7-1.9-5.7-5.9-5.9-6.2-.2-.3-1.5-2-.9-3.9Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    WhatsApp
+                </a>
+                <a href="#" target="_blank" rel="noreferrer" aria-label="Join us on Telegram">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M20.5 4.5 3.8 11.2c-.9.4-.9 1.6.1 1.9l4.1 1.3 1.6 5.1c.2.7 1.1.8 1.5.3l2.4-2.9 4.7 3.4c.6.4 1.4.1 1.5-.6l2.8-14c.1-.8-.7-1.5-1.5-1.2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                        <path d="M8 14.4 19.2 6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                    </svg>
+                    Telegram
+                </a>
+            </div>
+            <p class="footer-copy">&copy; 2026 Global 24 News. Designed and created by Peter David Ade.</p>
         </div>
     </footer>
 
