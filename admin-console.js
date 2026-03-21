@@ -377,7 +377,7 @@ function getPostPayload() {
         location: formData.get("location")?.toString().trim(),
         status: formData.get("status")?.toString().trim(),
         imageAlt: formData.get("imageAlt")?.toString().trim(),
-        imageSrc: pendingImageDataUrls.find(Boolean) || "./images/news-world.jpg",
+        imageSrc: pendingImageDataUrls.find(Boolean) || "./images/Read More Icon.png",
         galleryImages: pendingImageDataUrls.filter(Boolean).slice(0, 3),
         videoIds: pendingVideoIds.filter(Boolean).slice(0, 3),
         featured: Boolean(formData.get("featured")),

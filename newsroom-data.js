@@ -32,8 +32,8 @@
             featured: true,
             trending: true,
             imageAlt: "Students and teachers in a classroom using digital learning tools",
-            imageSrc: "./images/news-education.jpg",
-            galleryImages: ["./images/news-education.jpg"],
+            imageSrc: "./images/Ghana flag.jpg",
+            galleryImages: ["./images/Ghana flag.jpg"],
             status: "published",
             publishedAt: "2026-03-19T13:25:00.000Z",
             updatedAt: "2026-03-19T13:25:00.000Z"
@@ -50,8 +50,8 @@
             location: "Brussels",
             trending: true,
             imageAlt: "World leaders meeting during an international diplomatic session",
-            imageSrc: "./images/news-world.jpg",
-            galleryImages: ["./images/news-world.jpg"],
+            imageSrc: "./images/Senegal.jpg",
+            galleryImages: ["./images/Senegal.jpg"],
             status: "published",
             publishedAt: "2026-03-19T13:02:00.000Z",
             updatedAt: "2026-03-19T13:02:00.000Z"
@@ -68,8 +68,8 @@
             location: "Parliament House",
             trending: true,
             imageAlt: "Political leaders in a parliamentary session",
-            imageSrc: "./images/news-politics.jpg",
-            galleryImages: ["./images/news-politics.jpg"],
+            imageSrc: "./images/Sam george.jpg",
+            galleryImages: ["./images/Sam george.jpg"],
             status: "published",
             publishedAt: "2026-03-19T12:30:00.000Z",
             updatedAt: "2026-03-19T12:30:00.000Z"
@@ -85,8 +85,8 @@
             region: "World",
             location: "New York",
             imageAlt: "Market data displayed on trading screens",
-            imageSrc: "./images/news-business.jpg",
-            galleryImages: ["./images/news-business.jpg"],
+            imageSrc: "./images/888.jpg",
+            galleryImages: ["./images/888.jpg"],
             status: "published",
             publishedAt: "2026-03-19T11:50:00.000Z",
             updatedAt: "2026-03-19T11:50:00.000Z"
@@ -102,8 +102,8 @@
             region: "World",
             location: "London",
             imageAlt: "A technology interface representing AI and digital regulation",
-            imageSrc: "./images/news-technology.jpg",
-            galleryImages: ["./images/news-technology.jpg"],
+            imageSrc: "./images/telegram.png",
+            galleryImages: ["./images/telegram.png"],
             status: "archived",
             publishedAt: "2026-03-18T21:05:00.000Z",
             updatedAt: "2026-03-18T21:05:00.000Z"
@@ -120,8 +120,8 @@
             location: "Nairobi",
             trending: true,
             imageAlt: "Emergency responders working during severe weather disruption",
-            imageSrc: "./images/news-breaking.jpg",
-            galleryImages: ["./images/news-breaking.jpg"],
+            imageSrc: "./images/Read More Icon.png",
+            galleryImages: ["./images/Read More Icon.png"],
             status: "published",
             publishedAt: "2026-03-19T13:48:00.000Z",
             updatedAt: "2026-03-19T13:48:00.000Z"
@@ -137,8 +137,8 @@
             region: "Ghana",
             location: "Accra",
             imageAlt: "Business owners discussing market trends in Accra",
-            imageSrc: "./images/news-accra-business.jpg",
-            galleryImages: ["./images/news-accra-business.jpg"],
+            imageSrc: "./images/Tomato Seller.jpg",
+            galleryImages: ["./images/Tomato Seller.jpg"],
             status: "published",
             publishedAt: "2026-03-19T10:30:00.000Z",
             updatedAt: "2026-03-19T10:30:00.000Z"
@@ -154,8 +154,8 @@
             region: "Ghana",
             location: "Kumasi",
             imageAlt: "University researchers collaborating in a laboratory or campus setting",
-            imageSrc: "./images/news-research.jpg",
-            galleryImages: ["./images/news-research.jpg"],
+            imageSrc: "./images/Gyakie.jpg",
+            galleryImages: ["./images/Gyakie.jpg"],
             status: "archived",
             publishedAt: "2026-03-18T18:40:00.000Z",
             updatedAt: "2026-03-18T18:40:00.000Z"
@@ -171,8 +171,8 @@
             region: "World",
             location: "Addis Ababa",
             imageAlt: "Officials meeting over border, trade, and migration coordination",
-            imageSrc: "./images/news-diplomacy.jpg",
-            galleryImages: ["./images/news-diplomacy.jpg"],
+            imageSrc: "./images/Presidential Get.jpg",
+            galleryImages: ["./images/Presidential Get.jpg"],
             status: "published",
             publishedAt: "2026-03-19T08:40:00.000Z",
             updatedAt: "2026-03-19T08:40:00.000Z"
@@ -240,7 +240,7 @@
         const nowIso = getNowIso();
         const title = String(post.title || "").trim();
         const publishedAt = post.publishedAt ? formatIsoDate(post.publishedAt) : nowIso;
-        const fallbackImage = String(post.imageSrc || "./images/news-world.jpg").trim();
+        const fallbackImage = String(post.imageSrc || "./images/Read More Icon.png").trim();
         const galleryImages = Array.isArray(post.galleryImages)
             ? post.galleryImages.map((image) => String(image || "").trim()).filter(Boolean).slice(0, 3)
             : [];
