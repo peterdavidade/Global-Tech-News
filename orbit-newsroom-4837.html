@@ -146,11 +146,27 @@
                     <label for="postContent">Full story</label>
                     <textarea id="postContent" name="content" rows="9" required></textarea>
 
+                    <label class="checkbox-row" for="postSensitive">
+                        <input type="checkbox" id="postSensitive" name="sensitive">
+                        <span>Sensitive story (show disclaimer)</span>
+                    </label>
+                    <label for="postDisclaimer">Disclaimer text (optional)</label>
+                    <textarea
+                        id="postDisclaimer"
+                        name="disclaimer"
+                        rows="3"
+                        maxlength="280"
+                        placeholder="Viewer discretion advised. This report contains details some readers may find distressing."
+                        disabled
+                    ></textarea>
+                    <p class="section-note">If enabled, the disclaimer displays below the story on the public page.</p>
+
                     <div class="form-split">
                         <div>
                             <label for="postCategory">Category</label>
                             <select id="postCategory" name="category">
                                 <option>Breaking News</option>
+                                <option>Crime</option>
                                 <option>Politics</option>
                                 <option>World News</option>
                                 <option>Business</option>

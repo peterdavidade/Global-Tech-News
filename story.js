@@ -468,6 +468,16 @@ function renderStory(post) {
         .map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`)
         .join("");
 
+    const disclaimerText = String(post.disclaimer || "").trim();
+    const disclaimerMarkup = disclaimerText
+        ? `
+            <aside class="story-disclaimer" role="note">
+                <span class="story-disclaimer-label">Disclaimer</span>
+                <p>${escapeHtml(disclaimerText)}</p>
+            </aside>
+        `
+        : "";
+
     storyPanel.innerHTML = `
         <div class="story-topline">
             <a class="story-chip story-chip-link" href="${getCategoryFilterUrl(post.category)}">${escapeHtml(post.category)}</a>
@@ -481,6 +491,7 @@ function renderStory(post) {
         <div class="story-video-grid" id="storyVideoGrid" hidden></div>
         <div class="story-gallery ${galleryImages.length > 1 ? "is-multi" : ""}">${galleryMarkup}</div>
         <div class="story-body">${paragraphs}</div>
+        ${disclaimerMarkup}
         ${createStoryEngagement(post)}
     `;
 

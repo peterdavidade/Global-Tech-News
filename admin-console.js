@@ -77,11 +77,16 @@ const videoFileInput3 = document.getElementById("postVideoFile3");
 const videoPreview = document.getElementById("videoPreview");
 const videoPreview2 = document.getElementById("videoPreview2");
 const videoPreview3 = document.getElementById("videoPreview3");
+const postSensitiveToggle = document.getElementById("postSensitive");
+const postDisclaimerInput = document.getElementById("postDisclaimer");
 
 let pendingImageDataUrls = [];
 let pendingVideoIds = [];
 let pendingVideoFiles = [];
 let pendingVideoPreviewUrls = [];
+
+const DEFAULT_DISCLAIMER_TEXT =
+    "Viewer discretion advised. This report contains details some readers may find distressing.";
 
 const localOnlySections = Array.from(document.querySelectorAll("[data-local-only]"));
 
@@ -96,6 +101,23 @@ function syncRemoveImageButtons() {
         const hasImage = Boolean(pendingImageDataUrls[index]);
         button.disabled = !hasImage;
     });
+}
+
+function syncDisclaimerControls() {
+    if (!postSensitiveToggle || !postDisclaimerInput) {
+        return;
+    }
+
+    if (postSensitiveToggle.checked) {
+        postDisclaimerInput.disabled = false;
+        if (!postDisclaimerInput.value.trim()) {
+            postDisclaimerInput.value = DEFAULT_DISCLAIMER_TEXT;
+        }
+        return;
+    }
+
+    postDisclaimerInput.value = "";
+    postDisclaimerInput.disabled = true;
 }
 
 function removeImageSlot(slotIndex) {
@@ -155,6 +177,7 @@ function resetEditor() {
     });
     editorTitle.textContent = "Create a post";
     setStatus(editorStatus, "", "");
+    syncDisclaimerControls();
 }
 
 function renderAnalytics() {
@@ -186,6 +209,7 @@ function createPostCard(post) {
                         <span class="post-chip">${post.category}</span>
                         <span class="post-chip">${post.region}</span>
                         <span class="post-chip">${post.status}</span>
+                        ${post.disclaimer ? '<span class="post-chip">sensitive</span>' : ""}
                         ${post.featured ? '<span class="post-chip">homepage hero</span>' : ""}
                     </div>
                 </div>
@@ -242,6 +266,14 @@ function populateEditor(post) {
     postForm.imageAlt.value = post.imageAlt;
     postForm.featured.checked = Boolean(post.featured);
     postForm.trending.checked = Boolean(post.trending);
+    const disclaimer = String(post.disclaimer || "").trim();
+    if (postSensitiveToggle) {
+        postSensitiveToggle.checked = Boolean(disclaimer);
+    }
+    if (postDisclaimerInput) {
+        postDisclaimerInput.value = disclaimer;
+    }
+    syncDisclaimerControls();
     pendingImageDataUrls = Array.isArray(post.galleryImages) && post.galleryImages.length ? [...post.galleryImages] : [post.imageSrc];
     syncRemoveImageButtons();
     pendingVideoIds = Array.isArray(post.videoIds) ? post.videoIds.map((id) => String(id || "")).slice(0, 3) : [];
@@ -382,6 +414,10 @@ async function persistPendingVideos() {
 
 function getPostPayload() {
     const formData = new FormData(postForm);
+    const wantsDisclaimer = Boolean(formData.get("sensitive"));
+    const disclaimerText = wantsDisclaimer
+        ? (formData.get("disclaimer")?.toString().trim() || DEFAULT_DISCLAIMER_TEXT)
+        : "";
     return {
         title: formData.get("title")?.toString().trim(),
         summary: formData.get("summary")?.toString().trim(),
@@ -395,7 +431,8 @@ function getPostPayload() {
         galleryImages: pendingImageDataUrls.filter(Boolean).slice(0, 3),
         videoIds: pendingVideoIds.filter(Boolean).slice(0, 3),
         featured: Boolean(formData.get("featured")),
-        trending: Boolean(formData.get("trending"))
+        trending: Boolean(formData.get("trending")),
+        disclaimer: disclaimerText
     };
 }
 
@@ -880,6 +917,13 @@ if (archiveTickerForm) {
 }
 
 syncRemoveImageButtons();
+syncDisclaimerControls();
+
+if (postSensitiveToggle) {
+    postSensitiveToggle.addEventListener("change", () => {
+        syncDisclaimerControls();
+    });
+}
 
 if (getIsFirebaseLoginActive()) {
     if (typeof onAdminAuthStateChanged === "function") {

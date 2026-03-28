@@ -648,6 +648,7 @@
             title,
             summary: String(post.summary || "").trim(),
             content: String(post.content || "").trim(),
+            disclaimer: String(post.disclaimer || "").trim(),
             category: String(post.category || "General").trim(),
             region: String(post.region || "World").trim(),
             location: String(post.location || "News Desk").trim(),
