@@ -1,4 +1,13 @@
 const {
+    init,
+    onStoreUpdated,
+    isFirebaseConfigured,
+    isAdminSignedIn,
+    signInAdmin,
+    signOutAdmin,
+    sendAdminPasswordReset,
+    onAdminAuthStateChanged,
+    bootstrapRemoteFromLocalIfEmpty,
     getPosts,
     getPostById,
     createPost,
@@ -25,7 +34,10 @@ const {
 
 const loginGate = document.getElementById("loginGate");
 const loginForm = document.getElementById("loginForm");
+const firebaseLoginForm = document.getElementById("firebaseLoginForm");
+const resetPasswordButton = document.getElementById("resetPasswordButton");
 const loginStatus = document.getElementById("loginStatus");
+const loginStatusLocal = document.getElementById("loginStatusLocal");
 const adminShell = document.getElementById("adminShell");
 const logoutButton = document.getElementById("logoutButton");
 const analyticsGrid = document.getElementById("analyticsGrid");
@@ -70,6 +82,8 @@ let pendingImageDataUrls = [];
 let pendingVideoIds = [];
 let pendingVideoFiles = [];
 let pendingVideoPreviewUrls = [];
+
+const localOnlySections = Array.from(document.querySelectorAll("[data-local-only]"));
 
 function syncRemoveImageButtons() {
     const buttons = [removeImage1Button, removeImage2Button, removeImage3Button];
@@ -395,6 +409,97 @@ function refreshDashboard() {
     renderPostsList();
 }
 
+function getIsFirebaseLoginActive() {
+    return typeof isFirebaseConfigured === "function" && isFirebaseConfigured();
+}
+
+function syncLoginModeUi() {
+    const firebaseMode = getIsFirebaseLoginActive();
+
+    if (firebaseLoginForm) {
+        firebaseLoginForm.hidden = !firebaseMode;
+    }
+
+    if (loginForm) {
+        loginForm.hidden = firebaseMode;
+    }
+
+    localOnlySections.forEach((section) => {
+        section.hidden = firebaseMode;
+    });
+}
+
+syncLoginModeUi();
+
+if (typeof init === "function") {
+    init();
+}
+
+if (firebaseLoginForm) {
+    firebaseLoginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        if (typeof signInAdmin !== "function") {
+            setStatus(loginStatus, "Firebase login is unavailable in this build.", "error");
+            return;
+        }
+
+        const formData = new FormData(firebaseLoginForm);
+        const email = formData.get("adminEmail")?.toString().trim();
+        const password = formData.get("adminPassword")?.toString();
+
+        if (!email || !password) {
+            setStatus(loginStatus, "Enter your email and password to continue.", "error");
+            return;
+        }
+
+        setStatus(loginStatus, "Signing in…");
+
+        try {
+            await signInAdmin(email, password);
+            if (typeof bootstrapRemoteFromLocalIfEmpty === "function") {
+                try {
+                    await bootstrapRemoteFromLocalIfEmpty();
+                } catch (error) {
+                    // Ignore bootstrap errors; admin can still work normally.
+                }
+            }
+            setConsoleVisibility(true);
+            refreshDashboard();
+            setStatus(loginStatus, "Signed in successfully.", "success");
+        } catch (error) {
+            setConsoleVisibility(false);
+            setStatus(loginStatus, "Sign-in failed. Check your credentials and try again.", "error");
+        }
+    });
+}
+
+if (resetPasswordButton) {
+    resetPasswordButton.addEventListener("click", async () => {
+        if (typeof sendAdminPasswordReset !== "function") {
+            setStatus(loginStatus, "Password reset is unavailable in this build.", "error");
+            return;
+        }
+
+        const emailInput = document.getElementById("adminEmail");
+        const email = emailInput?.value?.toString().trim();
+
+        if (!email) {
+            setStatus(loginStatus, "Enter your email first, then click “Forgot password”.", "error");
+            return;
+        }
+
+        setStatus(loginStatus, "Sending reset email…");
+
+        try {
+            await sendAdminPasswordReset(email);
+            setStatus(loginStatus, "Password reset email sent.", "success");
+        } catch (error) {
+            setStatus(loginStatus, "Unable to send reset email. Check the email and try again.", "error");
+        }
+    });
+}
+
 if (loginForm) {
     loginForm.addEventListener("submit", (event) => {
         event.preventDefault();
@@ -402,7 +507,7 @@ if (loginForm) {
         const passcode = formData.get("adminPasscode")?.toString();
 
         if (typeof verifyAdminPasscode !== "function" || !verifyAdminPasscode(passcode)) {
-            setStatus(loginStatus, "Access denied. Check your passcode and try again.", "error");
+            setStatus(loginStatusLocal, "Access denied. Check your passcode and try again.", "error");
             return;
         }
 
@@ -413,10 +518,20 @@ if (loginForm) {
 }
 
 if (logoutButton) {
-    logoutButton.addEventListener("click", () => {
+    logoutButton.addEventListener("click", async () => {
         closeAdminSession();
+
+        if (getIsFirebaseLoginActive() && typeof signOutAdmin === "function") {
+            try {
+                await signOutAdmin();
+            } catch (error) {
+                // Ignore.
+            }
+        }
+
         setConsoleVisibility(false);
         setStatus(loginStatus, "", "");
+        setStatus(loginStatusLocal, "", "");
     });
 }
 
@@ -484,12 +599,17 @@ if (postForm) {
 
         const postId = postIdInput.value;
 
-        if (postId) {
-            updatePost(postId, payload);
-            setStatus(editorStatus, "Post updated successfully.", "success");
-        } else {
-            createPost(payload);
-            setStatus(editorStatus, "Post published successfully.", "success");
+        try {
+            if (postId) {
+                await updatePost(postId, payload);
+                setStatus(editorStatus, "Post updated successfully.", "success");
+            } else {
+                await createPost(payload);
+                setStatus(editorStatus, "Post published successfully.", "success");
+            }
+        } catch (error) {
+            setStatus(editorStatus, "Save failed. Check your connection and permissions, then try again.", "error");
+            return;
         }
 
         refreshDashboard();
@@ -558,16 +678,26 @@ if (postsList) {
                 return;
             }
 
-            setFeaturedPost(postId);
-            refreshDashboard();
-            setStatus(editorStatus, "Homepage hero updated.", "success");
+            setFeaturedPost(postId)
+                .then(() => {
+                    refreshDashboard();
+                    setStatus(editorStatus, "Homepage hero updated.", "success");
+                })
+                .catch(() => {
+                    setStatus(editorStatus, "Unable to update homepage hero. Check permissions and try again.", "error");
+                });
             return;
         }
 
         if (action === "toggle-status") {
-            togglePostStatus(postId);
-            refreshDashboard();
-            setStatus(editorStatus, "Post status updated.", "success");
+            togglePostStatus(postId)
+                .then(() => {
+                    refreshDashboard();
+                    setStatus(editorStatus, "Post status updated.", "success");
+                })
+                .catch(() => {
+                    setStatus(editorStatus, "Unable to update post status. Check permissions and try again.", "error");
+                });
             return;
         }
 
@@ -578,9 +708,14 @@ if (postsList) {
                 return;
             }
 
-            deletePost(postId);
-            refreshDashboard();
-            setStatus(editorStatus, "Post deleted.", "success");
+            deletePost(postId)
+                .then(() => {
+                    refreshDashboard();
+                    setStatus(editorStatus, "Post deleted.", "success");
+                })
+                .catch(() => {
+                    setStatus(editorStatus, "Unable to delete post. Check permissions and try again.", "error");
+                });
         }
     });
 }
@@ -746,11 +881,36 @@ if (archiveTickerForm) {
 
 syncRemoveImageButtons();
 
-if (typeof hasAdminSession === "function" && hasAdminSession()) {
+if (getIsFirebaseLoginActive()) {
+    if (typeof onAdminAuthStateChanged === "function") {
+        onAdminAuthStateChanged((user) => {
+            syncLoginModeUi();
+            if (user) {
+                setConsoleVisibility(true);
+                refreshDashboard();
+            } else {
+                setConsoleVisibility(false);
+            }
+        });
+    } else if (typeof isAdminSignedIn === "function" && isAdminSignedIn()) {
+        setConsoleVisibility(true);
+        refreshDashboard();
+    } else {
+        setConsoleVisibility(false);
+    }
+} else if (typeof hasAdminSession === "function" && hasAdminSession()) {
     setConsoleVisibility(true);
     refreshDashboard();
 } else {
     setConsoleVisibility(false);
+}
+
+if (typeof onStoreUpdated === "function") {
+    onStoreUpdated(() => {
+        if (!adminShell.hidden) {
+            refreshDashboard();
+        }
+    });
 }
 
 window.addEventListener("storage", (event) => {

@@ -7,6 +7,7 @@
     const LIVE_DESK_STORAGE_KEY = "daily-affairs.live-desk.v1";
     const LIVE_TICKER_STORAGE_KEY = "daily-affairs.live-ticker.v1";
     const ARCHIVE_TICKER_STORAGE_KEY = "daily-affairs.archive-ticker.v1";
+    const STORE_UPDATED_EVENT = "daily-affairs.store-updated.v1";
     const LIVE_POST_LIMIT = 4;
     const LIVE_POST_WINDOW_MINUTES = 24 * 60;
 
@@ -17,6 +18,398 @@
     const DEFAULT_ADMIN_CONFIG = {
         passcode: "DailyAffairs-Desk-2026"
     };
+
+    let remoteInitPromise = null;
+    let remoteWatchStarted = false;
+    let remoteUnsubscribers = [];
+
+    function emitStoreUpdated() {
+        try {
+            window.dispatchEvent(new CustomEvent(STORE_UPDATED_EVENT));
+        } catch (error) {
+            // Ignore.
+        }
+    }
+
+    function onStoreUpdated(callback) {
+        if (typeof callback !== "function") {
+            return () => {};
+        }
+
+        window.addEventListener(STORE_UPDATED_EVENT, callback);
+        return () => window.removeEventListener(STORE_UPDATED_EVENT, callback);
+    }
+
+    function isFirebaseConfigured() {
+        return Boolean(window.FirebaseNewsroom?.isConfigured && window.FirebaseNewsroom?.db && window.FirebaseNewsroom?.auth);
+    }
+
+    function getFirebaseDb() {
+        return window.FirebaseNewsroom?.db || null;
+    }
+
+    function getFirebaseAuth() {
+        return window.FirebaseNewsroom?.auth || null;
+    }
+
+    function isAdminSignedIn() {
+        const auth = getFirebaseAuth();
+        return Boolean(auth?.currentUser);
+    }
+
+    function getSiteConfigDocRef() {
+        const db = getFirebaseDb();
+
+        if (!db) {
+            return null;
+        }
+
+        return db.collection("siteConfig").doc("public");
+    }
+
+    async function syncSiteConfigFromRemote() {
+        const ref = getSiteConfigDocRef();
+
+        if (!ref) {
+            return null;
+        }
+
+        const snapshot = await ref.get();
+        const data = snapshot.exists ? snapshot.data() : null;
+
+        if (!data || typeof data !== "object") {
+            return null;
+        }
+
+        const liveDesk = data.liveDesk && typeof data.liveDesk === "object" ? data.liveDesk : null;
+        const liveTicker = Array.isArray(data.liveTicker) ? data.liveTicker : null;
+        const archiveTicker = Array.isArray(data.archiveTicker) ? data.archiveTicker : null;
+
+        if (liveDesk) {
+            localStorage.setItem(
+                LIVE_DESK_STORAGE_KEY,
+                JSON.stringify({
+                    label: String(liveDesk.label || "").trim(),
+                    value: String(liveDesk.value || "").trim()
+                })
+            );
+        } else {
+            localStorage.removeItem(LIVE_DESK_STORAGE_KEY);
+        }
+
+        if (liveTicker) {
+            localStorage.setItem(
+                LIVE_TICKER_STORAGE_KEY,
+                JSON.stringify(liveTicker.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 3))
+            );
+        }
+
+        if (archiveTicker) {
+            localStorage.setItem(
+                ARCHIVE_TICKER_STORAGE_KEY,
+                JSON.stringify(archiveTicker.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 3))
+            );
+        }
+
+        return data;
+    }
+
+    async function syncPostsFromRemote() {
+        const db = getFirebaseDb();
+
+        if (!db) {
+            return [];
+        }
+
+        const snapshot = await db.collection("posts").get();
+        const posts = snapshot.docs
+            .map((doc) => {
+                const data = doc.data() || {};
+                const idFromDoc = Number(doc.id);
+                return normalizePost({
+                    ...data,
+                    id: Number.isFinite(idFromDoc) ? idFromDoc : data.id
+                });
+            })
+            .filter((post) => Number.isFinite(post.id))
+            .sort((postA, postB) => new Date(postB.publishedAt) - new Date(postA.publishedAt));
+
+        if (posts.length) {
+            // Keep the rest of the app sync/synchronous by hydrating localStorage.
+            localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(posts));
+        }
+
+        return posts;
+    }
+
+    async function bootstrapRemoteFromLocalIfEmpty() {
+        if (!isFirebaseConfigured() || !isAdminSignedIn()) {
+            return null;
+        }
+
+        const db = getFirebaseDb();
+        if (!db) {
+            return null;
+        }
+
+        const remoteSnapshot = await db.collection("posts").limit(1).get();
+
+        if (!remoteSnapshot.empty) {
+            return false;
+        }
+
+        const localPosts = getPosts();
+        await syncAllPostsToRemote(localPosts);
+
+        // Best-effort seed siteConfig from local settings if present.
+        const liveDesk = getLiveDeskSettings();
+        const liveTicker = getLiveTickerItems();
+        const archiveTicker = getArchiveTickerItems();
+        const siteConfig = {
+            liveDesk: liveDesk || null,
+            liveTicker: Array.isArray(liveTicker) ? liveTicker : [],
+            archiveTicker: Array.isArray(archiveTicker) ? archiveTicker : []
+        };
+
+        await writeSiteConfigToRemote(siteConfig);
+        return true;
+    }
+
+    async function writeSiteConfigToRemote(partial) {
+        if (!isFirebaseConfigured() || !isAdminSignedIn()) {
+            return null;
+        }
+
+        const ref = getSiteConfigDocRef();
+        if (!ref) {
+            return null;
+        }
+
+        await ref.set(partial || {}, { merge: true });
+        return true;
+    }
+
+    async function syncAllPostsToRemote(posts) {
+        if (!isFirebaseConfigured() || !isAdminSignedIn()) {
+            return null;
+        }
+
+        const db = getFirebaseDb();
+        if (!db) {
+            return null;
+        }
+
+        const ids = new Set((posts || []).map((post) => String(post.id)));
+        const chunks = [];
+        const list = Array.isArray(posts) ? posts : [];
+
+        for (let index = 0; index < list.length; index += 450) {
+            chunks.push(list.slice(index, index + 450));
+        }
+
+        for (const chunk of chunks) {
+            const batch = db.batch();
+            chunk.forEach((post) => {
+                const ref = db.collection("posts").doc(String(post.id));
+                batch.set(ref, post, { merge: true });
+            });
+            await batch.commit();
+        }
+
+        // Best-effort cleanup of remote docs that no longer exist locally (deletes can be limited by rules).
+        try {
+            const remoteSnapshot = await db.collection("posts").get();
+            const deletions = remoteSnapshot.docs
+                .map((doc) => doc.id)
+                .filter((docId) => !ids.has(String(docId)));
+
+            if (deletions.length) {
+                for (let index = 0; index < deletions.length; index += 450) {
+                    const batch = db.batch();
+                    deletions.slice(index, index + 450).forEach((docId) => {
+                        batch.delete(db.collection("posts").doc(String(docId)));
+                    });
+                    await batch.commit();
+                }
+            }
+        } catch (error) {
+            // Ignore cleanup errors.
+        }
+
+        return true;
+    }
+
+    async function deletePostFromRemote(postId) {
+        if (!isFirebaseConfigured() || !isAdminSignedIn()) {
+            return null;
+        }
+
+        const db = getFirebaseDb();
+        if (!db) {
+            return null;
+        }
+
+        await db.collection("posts").doc(String(Number(postId))).delete();
+        return true;
+    }
+
+    function startRemoteWatchers() {
+        if (remoteWatchStarted || !isFirebaseConfigured()) {
+            return;
+        }
+
+        const db = getFirebaseDb();
+        const configRef = getSiteConfigDocRef();
+
+        if (!db || !configRef) {
+            return;
+        }
+
+        remoteWatchStarted = true;
+        remoteUnsubscribers.forEach((unsubscribe) => {
+            try {
+                unsubscribe();
+            } catch (error) {
+                // Ignore.
+            }
+        });
+        remoteUnsubscribers = [];
+
+        try {
+            const unsubscribePosts = db.collection("posts").onSnapshot(
+                (snapshot) => {
+                    const posts = snapshot.docs
+                        .map((doc) => {
+                            const data = doc.data() || {};
+                            const idFromDoc = Number(doc.id);
+                            return normalizePost({
+                                ...data,
+                                id: Number.isFinite(idFromDoc) ? idFromDoc : data.id
+                            });
+                        })
+                        .filter((post) => Number.isFinite(post.id))
+                        .sort((postA, postB) => new Date(postB.publishedAt) - new Date(postA.publishedAt));
+
+                    if (posts.length) {
+                        localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(posts));
+                        emitStoreUpdated();
+                    }
+                },
+                () => {}
+            );
+            remoteUnsubscribers.push(unsubscribePosts);
+        } catch (error) {
+            // Ignore.
+        }
+
+        try {
+            const unsubscribeConfig = configRef.onSnapshot(
+                (snapshot) => {
+                    const data = snapshot.exists ? snapshot.data() : null;
+                    if (!data || typeof data !== "object") {
+                        return;
+                    }
+
+                    const liveDesk = data.liveDesk && typeof data.liveDesk === "object" ? data.liveDesk : null;
+                    const liveTicker = Array.isArray(data.liveTicker) ? data.liveTicker : null;
+                    const archiveTicker = Array.isArray(data.archiveTicker) ? data.archiveTicker : null;
+
+                    if (liveDesk) {
+                        localStorage.setItem(
+                            LIVE_DESK_STORAGE_KEY,
+                            JSON.stringify({
+                                label: String(liveDesk.label || "").trim(),
+                                value: String(liveDesk.value || "").trim()
+                            })
+                        );
+                    } else {
+                        localStorage.removeItem(LIVE_DESK_STORAGE_KEY);
+                    }
+
+                    if (liveTicker) {
+                        localStorage.setItem(
+                            LIVE_TICKER_STORAGE_KEY,
+                            JSON.stringify(liveTicker.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 3))
+                        );
+                    }
+
+                    if (archiveTicker) {
+                        localStorage.setItem(
+                            ARCHIVE_TICKER_STORAGE_KEY,
+                            JSON.stringify(archiveTicker.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 3))
+                        );
+                    }
+
+                    emitStoreUpdated();
+                },
+                () => {}
+            );
+            remoteUnsubscribers.push(unsubscribeConfig);
+        } catch (error) {
+            // Ignore.
+        }
+    }
+
+    function init() {
+        if (remoteInitPromise) {
+            return remoteInitPromise;
+        }
+
+        if (!isFirebaseConfigured()) {
+            remoteInitPromise = Promise.resolve(false);
+            return remoteInitPromise;
+        }
+
+        remoteInitPromise = Promise.all([syncPostsFromRemote(), syncSiteConfigFromRemote()])
+            .then(() => {
+                startRemoteWatchers();
+                emitStoreUpdated();
+                return true;
+            })
+            .catch(() => false);
+
+        return remoteInitPromise;
+    }
+
+    function signInAdmin(email, password) {
+        const auth = getFirebaseAuth();
+
+        if (!auth) {
+            return Promise.reject(new Error("Firebase Auth is not configured."));
+        }
+
+        return auth.signInWithEmailAndPassword(String(email || ""), String(password || ""));
+    }
+
+    function sendAdminPasswordReset(email) {
+        const auth = getFirebaseAuth();
+
+        if (!auth) {
+            return Promise.reject(new Error("Firebase Auth is not configured."));
+        }
+
+        return auth.sendPasswordResetEmail(String(email || ""));
+    }
+
+    function signOutAdmin() {
+        const auth = getFirebaseAuth();
+
+        if (!auth) {
+            return Promise.resolve(null);
+        }
+
+        return auth.signOut();
+    }
+
+    function onAdminAuthStateChanged(callback) {
+        const auth = getFirebaseAuth();
+
+        if (!auth || typeof callback !== "function") {
+            return () => {};
+        }
+
+        return auth.onAuthStateChanged(callback);
+    }
 
     const DEFAULT_POSTS = [
         {
@@ -290,11 +683,13 @@
         };
 
         localStorage.setItem(LIVE_DESK_STORAGE_KEY, JSON.stringify(normalized));
+        writeSiteConfigToRemote({ liveDesk: normalized }).catch(() => {});
         return normalized;
     }
 
     function clearLiveDeskSettings() {
         localStorage.removeItem(LIVE_DESK_STORAGE_KEY);
+        writeSiteConfigToRemote({ liveDesk: null }).catch(() => {});
     }
 
     function getLiveTickerItems() {
@@ -310,11 +705,13 @@
     function setLiveTickerItems(items) {
         const normalized = Array.isArray(items) ? items.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 3) : [];
         localStorage.setItem(LIVE_TICKER_STORAGE_KEY, JSON.stringify(normalized));
+        writeSiteConfigToRemote({ liveTicker: normalized }).catch(() => {});
         return normalized;
     }
 
     function clearLiveTickerItems() {
         localStorage.removeItem(LIVE_TICKER_STORAGE_KEY);
+        writeSiteConfigToRemote({ liveTicker: [] }).catch(() => {});
     }
 
     function getArchiveTickerItems() {
@@ -330,11 +727,13 @@
     function setArchiveTickerItems(items) {
         const normalized = Array.isArray(items) ? items.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 3) : [];
         localStorage.setItem(ARCHIVE_TICKER_STORAGE_KEY, JSON.stringify(normalized));
+        writeSiteConfigToRemote({ archiveTicker: normalized }).catch(() => {});
         return normalized;
     }
 
     function clearArchiveTickerItems() {
         localStorage.removeItem(ARCHIVE_TICKER_STORAGE_KEY);
+        writeSiteConfigToRemote({ archiveTicker: [] }).catch(() => {});
     }
 
     let mediaDbPromise = null;
@@ -481,7 +880,7 @@
         return posts.reduce((maxId, post) => Math.max(maxId, Number(post.id) || 0), 0) + 1;
     }
 
-    function createPost(postInput) {
+    async function createPost(postInput) {
         let posts = getPosts();
         const nowIso = getNowIso();
         const newPost = normalizePost({
@@ -499,11 +898,12 @@
         }
 
         posts.unshift(newPost);
-        savePosts(posts);
+        posts = savePosts(posts);
+        await syncAllPostsToRemote(posts);
         return newPost;
     }
 
-    function updatePost(postId, postInput) {
+    async function updatePost(postId, postInput) {
         const posts = getPosts();
         const postIndex = posts.findIndex((post) => post.id === Number(postId));
 
@@ -536,16 +936,18 @@
         }
 
         posts.splice(postIndex, 1, updatedPost);
-        savePosts(posts);
+        const saved = savePosts(posts);
+        await syncAllPostsToRemote(saved);
         return updatedPost;
     }
 
-    function deletePost(postId) {
+    async function deletePost(postId) {
         const posts = getPosts().filter((post) => post.id !== Number(postId));
         savePosts(posts);
+        await deletePostFromRemote(postId);
     }
 
-    function togglePostStatus(postId) {
+    async function togglePostStatus(postId) {
         const post = getPostById(postId);
 
         if (!post) {
@@ -557,14 +959,15 @@
         });
     }
 
-    function setFeaturedPost(postId) {
+    async function setFeaturedPost(postId) {
         const targetId = Number(postId);
         const posts = getPosts().map((post) => ({
             ...post,
             featured: post.id === targetId
         }));
-        savePosts(posts);
-        return posts.find((post) => post.id === targetId) || null;
+        const saved = savePosts(posts);
+        await syncAllPostsToRemote(saved);
+        return saved.find((post) => post.id === targetId) || null;
     }
 
     function getAdminConfig() {
@@ -598,6 +1001,10 @@
     }
 
     function hasAdminSession() {
+        if (isFirebaseConfigured()) {
+            return isAdminSignedIn() || sessionStorage.getItem(ADMIN_SESSION_KEY) === "open";
+        }
+
         return sessionStorage.getItem(ADMIN_SESSION_KEY) === "open";
     }
 
@@ -683,6 +1090,15 @@
     }
 
     window.NewsroomStore = {
+        init,
+        onStoreUpdated,
+        isFirebaseConfigured,
+        isAdminSignedIn,
+        signInAdmin,
+        signOutAdmin,
+        sendAdminPasswordReset,
+        onAdminAuthStateChanged,
+        bootstrapRemoteFromLocalIfEmpty,
         getPosts,
         savePosts,
         getPublishedPosts,

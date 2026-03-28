@@ -1,0 +1,7 @@
+{
+    "rewrites": [
+        { "source": "/admin", "destination": "/orbit-newsroom-4837.html" },
+        { "source": "/admin.html", "destination": "/orbit-newsroom-4837.html" }
+    ]
+}
+

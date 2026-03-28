@@ -10,6 +10,20 @@
 </head>
 <body>
     <div class="login-gate" id="loginGate">
+        <form class="login-card" id="firebaseLoginForm" hidden>
+            <span class="panel-kicker">Private Console</span>
+            <h1>Newsroom Access</h1>
+            <p>Sign in with your Firebase admin account to manage stories, uploads, and settings.</p>
+            <label for="adminEmail">Email</label>
+            <input type="email" id="adminEmail" name="adminEmail" autocomplete="username" required>
+            <label for="adminPassword">Password</label>
+            <input type="password" id="adminPassword" name="adminPassword" autocomplete="current-password" required>
+            <button type="submit">Sign In</button>
+            <button type="button" class="ghost-action" id="resetPasswordButton">Forgot password</button>
+            <button type="button" class="ghost-action" data-theme-toggle>Dark mode</button>
+            <p class="status-text" id="loginStatus"></p>
+        </form>
+
         <form class="login-card" id="loginForm">
             <span class="panel-kicker">Private Console</span>
             <h1>Newsroom Access</h1>
@@ -18,7 +32,7 @@
             <input type="password" id="adminPasscode" name="adminPasscode" autocomplete="current-password" required>
             <button type="submit">Unlock Console</button>
             <button type="button" class="ghost-action" data-theme-toggle>Dark mode</button>
-            <p class="status-text" id="loginStatus"></p>
+            <p class="status-text" id="loginStatusLocal"></p>
         </form>
     </div>
 
@@ -239,7 +253,7 @@
             </section>
         </section>
 
-        <section class="admin-panel">
+        <section class="admin-panel" data-local-only>
             <div class="section-heading">
                 <div>
                     <span class="panel-kicker">Protection</span>
@@ -256,6 +270,11 @@
         </section>
     </main>
 
+    <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="firebase-init.js"></script>
     <script src="newsroom-data.js"></script>
     <script src="admin-console.js"></script>
 </body>

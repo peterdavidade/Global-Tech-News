@@ -1,4 +1,6 @@
 const {
+    init,
+    onStoreUpdated,
     getPosts,
     getPublishedPosts,
     getArchivedPosts,
@@ -1085,3 +1087,15 @@ renderAll();
 setupSectionObserver();
 renderLiveTicker();
 renderArchiveTicker();
+
+if (typeof onStoreUpdated === "function") {
+    onStoreUpdated(() => {
+        renderAll();
+        renderLiveTicker();
+        renderArchiveTicker();
+    });
+}
+
+if (typeof init === "function") {
+    init();
+}

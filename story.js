@@ -1,4 +1,4 @@
-const { getPostBySlug, getPublishedPosts, trackVisit, formatDisplayDate, getMediaBlob } = window.NewsroomStore || {};
+const { init, onStoreUpdated, getPostBySlug, getPublishedPosts, trackVisit, formatDisplayDate, getMediaBlob } = window.NewsroomStore || {};
 
 const storyPanel = document.getElementById("storyPanel");
 const relatedStories = document.getElementById("relatedStories");
@@ -531,4 +531,26 @@ if (!storySlug || typeof getPostBySlug !== "function") {
         renderStory(post);
         renderRelated(post);
     }
+}
+
+if (typeof onStoreUpdated === "function") {
+    onStoreUpdated(() => {
+        if (!storySlug || typeof getPostBySlug !== "function") {
+            return;
+        }
+
+        const post = getPostBySlug(storySlug);
+
+        if (!post) {
+            renderMissingStory();
+            return;
+        }
+
+        renderStory(post);
+        renderRelated(post);
+    });
+}
+
+if (typeof init === "function") {
+    init();
 }
