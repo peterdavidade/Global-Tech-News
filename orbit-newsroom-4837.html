@@ -211,10 +211,16 @@
 
                     <label for="postImageFile">Upload image</label>
                     <input type="file" id="postImageFile" name="imageFile" accept="image/*">
+                    <label for="postImageUrl">…or paste image URL (recommended on free plan)</label>
+                    <input type="url" id="postImageUrl" name="imageUrl" placeholder="https://example.com/image.jpg">
                     <label for="postImageFile2">Optional second image</label>
                     <input type="file" id="postImageFile2" name="imageFile2" accept="image/*">
+                    <label for="postImageUrl2">…or paste second image URL</label>
+                    <input type="url" id="postImageUrl2" name="imageUrl2" placeholder="https://example.com/image2.jpg">
                     <label for="postImageFile3">Optional third image</label>
                     <input type="file" id="postImageFile3" name="imageFile3" accept="image/*">
+                    <label for="postImageUrl3">…or paste third image URL</label>
+                    <input type="url" id="postImageUrl3" name="imageUrl3" placeholder="https://example.com/image3.jpg">
                     <div class="image-preview-grid" id="imagePreviewGrid">
                         <img class="image-preview" id="imagePreview" alt="Selected post preview 1" hidden>
                         <img class="image-preview" id="imagePreview2" alt="Selected post preview 2" hidden>
@@ -265,6 +271,16 @@
                     </div>
                     <p class="section-note">Edit headlines, archive older stories, or delete drafts you no longer want.</p>
                 </div>
+                <div class="library-toolbar">
+                    <form class="library-search" id="adminSearchForm" role="search" autocomplete="off">
+                        <label for="adminSearchInput">Search posts</label>
+                        <div class="library-search-row">
+                            <input type="search" id="adminSearchInput" placeholder="Search title, summary, category, region, location, status, or ID">
+                            <button type="button" class="ghost-action search-clear" id="adminSearchClear">Clear</button>
+                        </div>
+                        <p class="section-note" id="adminSearchMeta"></p>
+                    </form>
+                </div>
                 <div class="posts-list" id="postsList"></div>
             </section>
         </section>
@@ -289,6 +305,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-storage-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script src="firebase-init.js"></script>
     <script src="newsroom-data.js"></script>

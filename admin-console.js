@@ -3,11 +3,13 @@ const {
     onStoreUpdated,
     isFirebaseConfigured,
     isAdminSignedIn,
+    isStorageConfigured,
     signInAdmin,
     signOutAdmin,
     sendAdminPasswordReset,
     onAdminAuthStateChanged,
     bootstrapRemoteFromLocalIfEmpty,
+    uploadMediaFile,
     getPosts,
     getPostById,
     createPost,
@@ -43,10 +45,15 @@ const logoutButton = document.getElementById("logoutButton");
 const analyticsGrid = document.getElementById("analyticsGrid");
 const heroAssignment = document.getElementById("heroAssignment");
 const postForm = document.getElementById("postForm");
+const savePostButton = postForm ? postForm.querySelector("button[type=\"submit\"]") : null;
 const postIdInput = document.getElementById("postId");
 const editorTitle = document.getElementById("editorTitle");
 const editorStatus = document.getElementById("editorStatus");
 const postsList = document.getElementById("postsList");
+const adminSearchForm = document.getElementById("adminSearchForm");
+const adminSearchInput = document.getElementById("adminSearchInput");
+const adminSearchClearButton = document.getElementById("adminSearchClear");
+const adminSearchMeta = document.getElementById("adminSearchMeta");
 const resetEditorButton = document.getElementById("resetEditorButton");
 const settingsForm = document.getElementById("settingsForm");
 const settingsStatus = document.getElementById("settingsStatus");
@@ -65,6 +72,9 @@ const clearArchiveTickerButton = document.getElementById("clearArchiveTickerButt
 const imageFileInput = document.getElementById("postImageFile");
 const imageFileInput2 = document.getElementById("postImageFile2");
 const imageFileInput3 = document.getElementById("postImageFile3");
+const imageUrlInput = document.getElementById("postImageUrl");
+const imageUrlInput2 = document.getElementById("postImageUrl2");
+const imageUrlInput3 = document.getElementById("postImageUrl3");
 const imagePreview = document.getElementById("imagePreview");
 const imagePreview2 = document.getElementById("imagePreview2");
 const imagePreview3 = document.getElementById("imagePreview3");
@@ -81,9 +91,13 @@ const postSensitiveToggle = document.getElementById("postSensitive");
 const postDisclaimerInput = document.getElementById("postDisclaimer");
 
 let pendingImageDataUrls = [];
+let pendingImageFiles = [];
+let pendingImageUploadHadFailures = false;
+let disableStorageUploadsForSession = false;
 let pendingVideoIds = [];
 let pendingVideoFiles = [];
 let pendingVideoPreviewUrls = [];
+let activeAdminSearchQuery = "";
 
 const DEFAULT_DISCLAIMER_TEXT =
     "Viewer discretion advised. This report contains details some readers may find distressing.";
@@ -122,6 +136,7 @@ function syncDisclaimerControls() {
 
 function removeImageSlot(slotIndex) {
     pendingImageDataUrls[slotIndex] = "";
+    pendingImageFiles[slotIndex] = null;
 
     const previews = [imagePreview, imagePreview2, imagePreview3];
     const inputs = [imageFileInput, imageFileInput2, imageFileInput3];
@@ -149,6 +164,19 @@ function setStatus(element, message, tone) {
     }
 }
 
+function withTimeout(promise, timeoutMs, timeoutMessage) {
+    const ms = Number(timeoutMs);
+
+    if (!Number.isFinite(ms) || ms <= 0) {
+        return promise;
+    }
+
+    return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutMessage || "Timed out.")), ms))
+    ]);
+}
+
 function setConsoleVisibility(isVisible) {
     loginGate.hidden = isVisible;
     adminShell.hidden = !isVisible;
@@ -158,6 +186,8 @@ function resetEditor() {
     postForm.reset();
     postIdInput.value = "";
     pendingImageDataUrls = [];
+    pendingImageFiles = [];
+    pendingImageUploadHadFailures = false;
     pendingVideoIds = [];
     pendingVideoFiles = [];
     pendingVideoPreviewUrls.forEach((url) => {
@@ -251,7 +281,40 @@ function renderPostsList() {
     }
 
     const posts = getPosts();
-    postsList.innerHTML = posts.map(createPostCard).join("");
+    const query = activeAdminSearchQuery.trim();
+
+    const filtered = query
+        ? posts.filter((post) => getPostSearchText(post).includes(query))
+        : posts;
+
+    if (adminSearchMeta) {
+        adminSearchMeta.textContent = query
+            ? `Showing ${filtered.length} of ${posts.length} posts for “${query}”.`
+            : `Showing ${posts.length} post${posts.length === 1 ? "" : "s"}.`;
+    }
+
+    postsList.innerHTML = filtered.map(createPostCard).join("");
+}
+
+function getPostSearchText(post) {
+    return [
+        post?.id,
+        post?.title,
+        post?.summary,
+        post?.content,
+        post?.category,
+        post?.region,
+        post?.location,
+        post?.status
+    ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+}
+
+function applyAdminSearch(query) {
+    activeAdminSearchQuery = String(query || "").trim().toLowerCase();
+    renderPostsList();
 }
 
 function populateEditor(post) {
@@ -275,6 +338,7 @@ function populateEditor(post) {
     }
     syncDisclaimerControls();
     pendingImageDataUrls = Array.isArray(post.galleryImages) && post.galleryImages.length ? [...post.galleryImages] : [post.imageSrc];
+    pendingImageFiles = [];
     syncRemoveImageButtons();
     pendingVideoIds = Array.isArray(post.videoIds) ? post.videoIds.map((id) => String(id || "")).slice(0, 3) : [];
     pendingVideoFiles = [];
@@ -286,6 +350,16 @@ function populateEditor(post) {
         } else {
             preview.removeAttribute("src");
         }
+    });
+
+    const urlInputs = [imageUrlInput, imageUrlInput2, imageUrlInput3];
+    urlInputs.forEach((input, index) => {
+        if (!input) {
+            return;
+        }
+
+        const src = String(pendingImageDataUrls[index] || "");
+        input.value = src.startsWith("http://") || src.startsWith("https://") ? src : "";
     });
 
     hydrateVideoPreviews();
@@ -303,15 +377,81 @@ function readImageAsDataUrl(file) {
     });
 }
 
+function normalizeImageUrl(value) {
+    const raw = String(value || "").trim();
+    // Users often paste URLs followed by punctuation (e.g. trailing comma from a sentence).
+    const url = raw.replace(/[)\],.]+$/g, "").trim();
+
+    if (!url) {
+        return "";
+    }
+
+    try {
+        const parsed = new URL(url);
+        const protocol = parsed.protocol.toLowerCase();
+
+        if (protocol !== "https:" && protocol !== "http:") {
+            return "";
+        }
+
+        const path = parsed.pathname.toLowerCase();
+        const looksLikeImage = /\.(png|jpe?g|webp|gif|svg)$/i.test(path);
+
+        // Require a direct image URL; pasting an article URL will not render in <img>.
+        if (!looksLikeImage) {
+            return "";
+        }
+
+        return parsed.toString();
+    } catch (error) {
+        return "";
+    }
+}
+
+function applyImageUrlsToSlots() {
+    const urls = [imageUrlInput?.value, imageUrlInput2?.value, imageUrlInput3?.value].map(normalizeImageUrl);
+    const fileInputs = [imageFileInput, imageFileInput2, imageFileInput3];
+    const previews = [imagePreview, imagePreview2, imagePreview3];
+
+    urls.forEach((url, index) => {
+        if (!url) {
+            return;
+        }
+
+        pendingImageFiles[index] = null;
+        pendingImageDataUrls[index] = url;
+
+        const fileInput = fileInputs[index];
+        if (fileInput) {
+            fileInput.value = "";
+        }
+
+        const preview = previews[index];
+        if (preview) {
+            preview.src = url;
+            preview.hidden = false;
+        }
+    });
+
+    syncRemoveImageButtons();
+}
+
 async function updateImageSlot(fileInput, previewElement, slotIndex) {
     const file = fileInput.files?.[0];
 
     if (!file) {
         pendingImageDataUrls[slotIndex] = pendingImageDataUrls[slotIndex] || "";
+        pendingImageFiles[slotIndex] = pendingImageFiles[slotIndex] || null;
         syncRemoveImageButtons();
         return;
     }
 
+    const urlInputs = [imageUrlInput, imageUrlInput2, imageUrlInput3];
+    if (urlInputs[slotIndex]) {
+        urlInputs[slotIndex].value = "";
+    }
+
+    pendingImageFiles[slotIndex] = file;
     const imageDataUrl = await readImageAsDataUrl(file);
     pendingImageDataUrls[slotIndex] = imageDataUrl;
     previewElement.src = imageDataUrl;
@@ -325,6 +465,60 @@ async function handleAllImagePreviews() {
         updateImageSlot(imageFileInput2, imagePreview2, 1),
         updateImageSlot(imageFileInput3, imagePreview3, 2)
     ]);
+}
+
+async function persistPendingImages() {
+    if (typeof isStorageConfigured !== "function" || !isStorageConfigured()) {
+        return pendingImageDataUrls;
+    }
+
+    if (typeof uploadMediaFile !== "function") {
+        return pendingImageDataUrls;
+    }
+
+    if (disableStorageUploadsForSession) {
+        pendingImageFiles = pendingImageFiles.map(() => null);
+        pendingImageDataUrls = pendingImageDataUrls.map(() => "");
+        pendingImageUploadHadFailures = true;
+        return pendingImageDataUrls;
+    }
+
+    const failures = [];
+    pendingImageUploadHadFailures = false;
+
+    await Promise.all(
+        pendingImageFiles.map(async (file, index) => {
+            if (!file) {
+                return;
+            }
+
+            try {
+                // If Storage is not enabled (Spark plan) or blocked by network, the SDK can retry for a while.
+                // Keep the UI responsive by timing out quickly and publishing without uploaded images.
+                const result = await withTimeout(uploadMediaFile(file, { folder: "images" }), 15000, "Image upload timed out.");
+                pendingImageDataUrls[index] = result?.url || "";
+            } catch (error) {
+                // Avoid saving large data URLs into Firestore when Storage upload fails.
+                const code = String(error?.code || "");
+                const message = String(error?.message || "").toLowerCase();
+                if (code.includes("storage/") || message.includes("storage") || message.includes("timed out")) {
+                    // If Storage isn't enabled or repeatedly failing, don't keep retrying on every save.
+                    disableStorageUploadsForSession = true;
+                }
+                failures.push(index);
+                pendingImageDataUrls[index] = "";
+            } finally {
+                pendingImageFiles[index] = null;
+            }
+        })
+    );
+
+    if (failures.length && editorStatus) {
+        pendingImageUploadHadFailures = true;
+        setStatus(editorStatus, "Some images failed to upload. The post will use the default placeholder image.", "error");
+    }
+
+    return pendingImageDataUrls;
 }
 
 async function hydrateVideoPreviews() {
@@ -472,6 +666,25 @@ if (typeof init === "function") {
     init();
 }
 
+if (adminSearchForm && adminSearchInput) {
+    adminSearchForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        applyAdminSearch(adminSearchInput.value);
+    });
+
+    adminSearchInput.addEventListener("input", () => {
+        applyAdminSearch(adminSearchInput.value);
+    });
+}
+
+if (adminSearchClearButton && adminSearchInput) {
+    adminSearchClearButton.addEventListener("click", () => {
+        adminSearchInput.value = "";
+        applyAdminSearch("");
+        adminSearchInput.focus();
+    });
+}
+
 if (firebaseLoginForm) {
     firebaseLoginForm.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -582,6 +795,39 @@ if (imageFileInput) {
     });
 }
 
+[imageUrlInput, imageUrlInput2, imageUrlInput3].forEach((input, index) => {
+    if (!input) {
+        return;
+    }
+
+    const previews = [imagePreview, imagePreview2, imagePreview3];
+    const fileInputs = [imageFileInput, imageFileInput2, imageFileInput3];
+
+    input.addEventListener("input", () => {
+        const url = normalizeImageUrl(input.value);
+
+        if (!url) {
+            return;
+        }
+
+        pendingImageFiles[index] = null;
+        pendingImageDataUrls[index] = url;
+
+        const fileInput = fileInputs[index];
+        if (fileInput) {
+            fileInput.value = "";
+        }
+
+        const preview = previews[index];
+        if (preview) {
+            preview.src = url;
+            preview.hidden = false;
+        }
+
+        syncRemoveImageButtons();
+    });
+});
+
 [removeImage1Button, removeImage2Button, removeImage3Button].forEach((button, index) => {
     if (!button) {
         return;
@@ -610,47 +856,128 @@ if (imageFileInput) {
 });
 
 if (postForm) {
+    postForm.addEventListener(
+        "invalid",
+        (event) => {
+            const field = event.target;
+
+            if (editorStatus) {
+                setStatus(editorStatus, "Complete all required fields before saving.", "error");
+            }
+
+            if (field && typeof field.scrollIntoView === "function") {
+                field.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+        },
+        true
+    );
+
+    if (savePostButton) {
+        savePostButton.addEventListener("click", () => {
+            if (typeof postForm.reportValidity === "function") {
+                postForm.reportValidity();
+            }
+        });
+    }
+
     postForm.addEventListener("submit", async (event) => {
         event.preventDefault();
-
-        try {
-            await handleAllImagePreviews();
-        } catch (error) {
-            setStatus(editorStatus, "Image upload failed. Try another file.", "error");
-            return;
+        pendingImageUploadHadFailures = false;
+        if (savePostButton) {
+            savePostButton.disabled = true;
+        }
+        if (editorStatus) {
+            setStatus(editorStatus, "Saving…");
         }
 
         try {
-            pendingVideoIds = await persistPendingVideos();
-        } catch (error) {
-            setStatus(editorStatus, "Video upload failed. Try a smaller file or another format.", "error");
-            return;
-        }
+            applyImageUrlsToSlots();
 
-        const payload = getPostPayload();
-
-        if (!validatePayload(payload)) {
-            setStatus(editorStatus, "Complete all required fields before saving.", "error");
-            return;
-        }
-
-        const postId = postIdInput.value;
-
-        try {
-            if (postId) {
-                await updatePost(postId, payload);
-                setStatus(editorStatus, "Post updated successfully.", "success");
-            } else {
-                await createPost(payload);
-                setStatus(editorStatus, "Post published successfully.", "success");
+            try {
+                await handleAllImagePreviews();
+            } catch (error) {
+                setStatus(editorStatus, "Image upload failed. Try another file.", "error");
+                return;
             }
-        } catch (error) {
-            setStatus(editorStatus, "Save failed. Check your connection and permissions, then try again.", "error");
-            return;
-        }
 
-        refreshDashboard();
-        resetEditor();
+            try {
+                if (editorStatus) {
+                    setStatus(editorStatus, "Uploading images…");
+                }
+                await persistPendingImages();
+            } catch (error) {
+                // persistPendingImages is best-effort; continue saving even if Storage fails.
+                if (editorStatus) {
+                    const message = String(error?.message || "").trim();
+                    setStatus(
+                        editorStatus,
+                        message ? `Image upload warning: ${message}` : "Image upload warning. Continuing without uploaded images.",
+                        "error"
+                    );
+                }
+            }
+
+            try {
+                if (editorStatus) {
+                    setStatus(editorStatus, "Saving videos…");
+                }
+                pendingVideoIds = await withTimeout(persistPendingVideos(), 30000, "Video save timed out.");
+            } catch (error) {
+                setStatus(editorStatus, "Video upload failed. Try a smaller file or another format.", "error");
+                return;
+            }
+
+            const payload = getPostPayload();
+
+            if (!validatePayload(payload)) {
+                setStatus(editorStatus, "Complete all required fields before saving.", "error");
+                return;
+            }
+
+            const postId = postIdInput.value;
+
+            try {
+                if (postId) {
+                    if (editorStatus) {
+                        setStatus(editorStatus, "Updating post…");
+                    }
+                    await withTimeout(updatePost(postId, payload), 20000, "Update timed out.");
+                    setStatus(
+                        editorStatus,
+                        pendingImageUploadHadFailures ? "Post updated (some images were skipped)." : "Post updated successfully.",
+                        "success"
+                    );
+                } else {
+                    if (editorStatus) {
+                        setStatus(editorStatus, "Publishing post…");
+                    }
+                    await withTimeout(createPost(payload), 20000, "Publish timed out.");
+                    setStatus(
+                        editorStatus,
+                        pendingImageUploadHadFailures ? "Post published (some images were skipped)." : "Post published successfully.",
+                        "success"
+                    );
+                }
+            } catch (error) {
+                const message = String(error?.message || "").trim();
+                const code = String(error?.code || "").trim();
+                setStatus(
+                    editorStatus,
+                    code || message
+                        ? `Save failed: ${[code, message].filter(Boolean).join(" - ")}`
+                        : "Save failed. Check your connection and permissions, then try again.",
+                    "error"
+                );
+                return;
+            }
+
+            refreshDashboard();
+            resetEditor();
+        } finally {
+            if (savePostButton) {
+                savePostButton.disabled = false;
+            }
+        }
     });
 }
 
@@ -958,7 +1285,7 @@ if (typeof onStoreUpdated === "function") {
 }
 
 window.addEventListener("storage", (event) => {
-    if (event.key === "daily-affairs.posts.v1" && !adminShell.hidden) {
+    if (event.key === "daily-affairs.posts.v2" && !adminShell.hidden) {
         refreshDashboard();
     }
 });
