@@ -96,6 +96,16 @@
                 <p class="brand-summary">Fast, reliable coverage of the last 24 hours in Ghana and around the world.</p>
             </div>
 
+            <div class="header-search" aria-label="Search stories">
+                <form class="search-form" id="searchForm" role="search" autocomplete="off">
+                    <label class="sr-only" for="searchInput">Search articles</label>
+                    <input type="search" id="searchInput" placeholder="Search by headline, category, keywords, or country">
+                    <button type="button" class="ghost-action search-clear" id="searchClear">Clear</button>
+                    <button type="submit">Search</button>
+                </form>
+                <p class="search-meta" id="searchMeta" aria-live="polite"></p>
+            </div>
+
             <div class="header-tools">
                 <button
                     type="button"
@@ -133,6 +143,8 @@
                 <a href="#mainFeed" data-filter-kind="region" data-filter-value="World">World News</a>
                 <a href="#mainFeed" data-filter-kind="category" data-filter-value="Politics">Politics</a>
                 <a href="#mainFeed" data-filter-kind="category" data-filter-value="Crime">Crime</a>
+                <a href="#mainFeed" data-filter-kind="category" data-filter-value="Sports">Sports</a>
+                <a href="#mainFeed" data-filter-kind="category" data-filter-value="Entertainment">Entertainment</a>
                 <a href="#mainFeed" data-filter-kind="category" data-filter-value="Technology">Technology</a>
                 <a href="#mainFeed" data-filter-kind="category" data-filter-value="Business">Business</a>
                 <a href="#mainFeed" data-filter-kind="category" data-filter-value="Education">Education</a>
@@ -359,18 +371,6 @@
             <!-- Optional right-side content rail -->
             <!-- Optional right-side content rail -->
             <aside class="sidebar-column">
-                <section class="sidebar-card search-card">
-                    <div class="sidebar-heading">
-                        <span class="section-chip">Search</span>
-                        <h3>Find a story fast</h3>
-                    </div>
-                    <form class="search-form" id="searchForm">
-                        <label class="sr-only" for="searchInput">Search articles</label>
-                        <input type="search" id="searchInput" placeholder="Search by headline, category, or country">
-                        <button type="submit">Search</button>
-                    </form>
-                </section>
-
                 <section class="sidebar-card">
                     <div class="sidebar-heading">
                         <span class="section-chip">Trending Stories</span>
@@ -604,6 +604,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-storage-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script src="firebase-init.js"></script>
     <script src="newsroom-data.js"></script>

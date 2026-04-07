@@ -20,6 +20,8 @@ const trendingList = document.getElementById("trendingList");
 const latestUpdatesList = document.getElementById("latestUpdatesList");
 const searchInput = document.getElementById("searchInput");
 const searchForm = document.getElementById("searchForm");
+const searchClearButton = document.getElementById("searchClear");
+const searchMeta = document.getElementById("searchMeta");
 const currentDate = document.getElementById("currentDate");
 const liveDeskLabel = document.getElementById("liveDeskLabel");
 const tickerTrack = document.getElementById("tickerTrack");
@@ -36,6 +38,8 @@ const hamburgerButton = document.getElementById("hamburgerButton");
 const sidebarNav = document.getElementById("sidebarNav");
 const sidebarCloseButton = document.getElementById("sidebarCloseButton");
 const navOverlay = document.getElementById("navOverlay");
+const latestFeedTitle = document.querySelector("#latest-feed .section-head h2");
+const latestFeedCopy = document.querySelector("#latest-feed .section-head .section-copy");
 const navLinks = Array.from(document.querySelectorAll("[data-nav-link]"));
 const hashNavLinks = navLinks.filter((link) => link.getAttribute("href")?.startsWith("#"));
 const observedSections = hashNavLinks
@@ -63,6 +67,89 @@ let activeSearchQuery = "";
 
 function normalizeFilterValue(value) {
     return String(value || "").trim().toLowerCase();
+}
+
+function escapeRegExp(value) {
+    return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function getSearchTokens(query) {
+    return String(query || "")
+        .trim()
+        .toLowerCase()
+        .split(/\s+/g)
+        .map((token) => token.trim())
+        .filter((token) => token.length >= 2)
+        .slice(0, 8);
+}
+
+function highlightText(value, tokens) {
+    const raw = String(value || "");
+
+    if (!tokens || !tokens.length) {
+        return escapeHtml(raw);
+    }
+
+    const escaped = escapeHtml(raw);
+    const pattern = tokens.map(escapeRegExp).sort((a, b) => b.length - a.length).join("|");
+
+    if (!pattern) {
+        return escaped;
+    }
+
+    const matcher = new RegExp(`(${pattern})`, "gi");
+    return escaped.replace(matcher, '<mark class="search-hit">$1</mark>');
+}
+
+function isDisplayablePost(post) {
+    return post && (post.status === "published" || post.status === "archived");
+}
+
+function getPostSearchText(post) {
+    return [
+        post?.category,
+        post?.title,
+        post?.summary,
+        post?.content,
+        post?.region,
+        post?.location
+    ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+}
+
+function postMatchesCategoryGroup(post, categoryLabel) {
+    const label = normalizeFilterValue(categoryLabel);
+    const category = normalizeFilterValue(post?.category);
+
+    if (!label) {
+        return true;
+    }
+
+    if (category === label) {
+        return true;
+    }
+
+    const text = getPostSearchText(post);
+
+    const rules = {
+        politics: /politic|parliament|government|president|minister|election|campaign|policy/i,
+        crime: /crime|police|court|trial|arrest|fraud|investigation|kidnap|murder|robbery|violence/i,
+        sports: /sport|football|soccer|afcon|fifa|uefa|premier|la liga|nba|boxing|ufc|athletics|olympic|tennis|match|tournament|league/i,
+        entertainment: /entertainment|music|movie|film|tv|television|showbiz|celebrity|artist|album|concert|award|festival|actor|actress/i,
+        technology: /tech|technology|ai|artificial intelligence|innovation|startup|cyber|software|internet|digital|gadget/i,
+        business: /business|market|econom|finance|bank|inflation|trade|investment|stock|currency|oil|prices/i,
+        education: /education|school|university|student|teacher|learning|exam|campus|classroom|curriculum/i,
+        "breaking news": /breaking|urgent|developing|just in/i
+    };
+
+    const matcher = rules[label];
+    if (matcher) {
+        return matcher.test(text);
+    }
+
+    return text.includes(label);
 }
 
 function getInitialContentFilter() {
@@ -259,6 +346,7 @@ function createEngagementSection(post) {
     `;
 }
 function createArticleCard(post) {
+    const tokens = getSearchTokens(activeSearchQuery);
     return `
         <article class="article-card" data-post-id="${post.id}">
             <div class="article-thumb">
@@ -266,12 +354,12 @@ function createArticleCard(post) {
             </div>
             <div class="article-body">
                 <div class="article-topline">
-                    <a href="${getFilterUrl("category", post.category)}" class="article-tag article-tag-link">${escapeHtml(post.category)}</a>
+                    <a href="${getFilterUrl("category", post.category)}" class="article-tag article-tag-link" data-filter-kind="category" data-filter-value="${escapeHtml(post.category)}">${escapeHtml(post.category)}</a>
                     <span class="article-location">${escapeHtml(post.location)}</span>
                     <span class="article-time">${formatRelativeTime(post.publishedAt)}</span>
                 </div>
-                <h3 class="article-title">${escapeHtml(post.title)}</h3>
-                <p class="article-summary">${escapeHtml(post.summary)}</p>
+                <h3 class="article-title">${highlightText(post.title, tokens)}</h3>
+                <p class="article-summary">${highlightText(post.summary, tokens)}</p>
                 <div class="article-footer">
                     <span class="article-time">${escapeHtml(formatDisplayDate(post.publishedAt))}</span>
                     <a href="${getStoryUrl(post)}" class="read-more">Read More</a>
@@ -282,17 +370,18 @@ function createArticleCard(post) {
 }
 
 function createUpdateCard(post) {
+    const tokens = getSearchTokens(activeSearchQuery);
     return `
         <article class="update-card" data-post-id="${post.id}">
             <div class="update-visual">
                 <img src="${escapeHtml(post.imageSrc)}" alt="${escapeHtml(post.imageAlt)}">
             </div>
             <div class="article-topline">
-                <a href="${getFilterUrl("category", post.category)}" class="article-tag article-tag-link">${escapeHtml(post.category)}</a>
+                <a href="${getFilterUrl("category", post.category)}" class="article-tag article-tag-link" data-filter-kind="category" data-filter-value="${escapeHtml(post.category)}">${escapeHtml(post.category)}</a>
                 <span class="article-time">${formatRelativeTime(post.publishedAt)}</span>
             </div>
-            <h3>${escapeHtml(post.title)}</h3>
-            <p>${escapeHtml(post.summary)}</p>
+            <h3>${highlightText(post.title, tokens)}</h3>
+            <p>${highlightText(post.summary, tokens)}</p>
             <a href="${getStoryUrl(post)}" class="read-more">Read More</a>
         </article>
     `;
@@ -377,7 +466,10 @@ function renderMainFeed(posts) {
         return;
     }
 
-    feedContainer.innerHTML = posts.slice(0, 4).map(createArticleCard).join("");
+    const shouldShowAll = Boolean(activeContentFilter) || Boolean(activeSearchQuery);
+    const limit = shouldShowAll ? posts.length : 4;
+
+    feedContainer.innerHTML = posts.slice(0, limit).map(createArticleCard).join("");
 }
 
 function postMatchesFilter(post, filter) {
@@ -386,11 +478,14 @@ function postMatchesFilter(post, filter) {
     }
 
     if (filter.kind === "region") {
-        return normalizeFilterValue(post.region) === normalizeFilterValue(filter.value);
+        const value = normalizeFilterValue(filter.value);
+        const region = normalizeFilterValue(post.region);
+        const category = normalizeFilterValue(post.category);
+        return region === value || category === `${value} news`;
     }
 
     if (filter.kind === "category") {
-        return normalizeFilterValue(post.category) === normalizeFilterValue(filter.value);
+        return postMatchesCategoryGroup(post, filter.value);
     }
 
     return true;
@@ -428,10 +523,13 @@ function syncFilterUrl() {
 }
 
 function renderRegionalFeeds(posts) {
+    const shouldShowAll = Boolean(activeContentFilter) || Boolean(activeSearchQuery);
+    const limit = shouldShowAll ? posts.length : 4;
+
     if (globalFeed) {
         globalFeed.innerHTML = posts
             .filter((post) => post.region === "World")
-            .slice(0, 4)
+            .slice(0, limit)
             .map(createUpdateCard)
             .join("");
     }
@@ -439,7 +537,7 @@ function renderRegionalFeeds(posts) {
     if (ghanaFeed) {
         ghanaFeed.innerHTML = posts
             .filter((post) => post.region === "Ghana")
-            .slice(0, 4)
+            .slice(0, limit)
             .map(createUpdateCard)
             .join("");
     }
@@ -586,15 +684,81 @@ function renderArchiveHub() {
 
 function renderAll() {
     allPublishedPosts = typeof getPublishedPosts === "function" ? getPublishedPosts() : [];
-    visiblePosts = allPublishedPosts.filter((post) => postMatchesFilter(post, activeContentFilter));
+
+    const allPosts = typeof getPosts === "function" ? getPosts() : [];
+    const filterSource = activeContentFilter || activeSearchQuery ? allPosts.filter(isDisplayablePost) : allPublishedPosts;
+
+    visiblePosts = filterSource.filter((post) => postMatchesFilter(post, activeContentFilter));
 
     if (activeSearchQuery) {
-        visiblePosts = visiblePosts.filter((post) =>
-            [post.title, post.summary, post.category, post.region, post.location, post.content]
-                .join(" ")
-                .toLowerCase()
-                .includes(activeSearchQuery)
-        );
+        const tokens = getSearchTokens(activeSearchQuery);
+
+        visiblePosts = visiblePosts
+            .map((post) => {
+                const title = String(post.title || "").toLowerCase();
+                const summary = String(post.summary || "").toLowerCase();
+                const category = String(post.category || "").toLowerCase();
+                const region = String(post.region || "").toLowerCase();
+                const location = String(post.location || "").toLowerCase();
+                const content = String(post.content || "").toLowerCase();
+
+                const haystack = `${title} ${summary} ${category} ${region} ${location} ${content}`;
+                if (!haystack.includes(activeSearchQuery)) {
+                    return null;
+                }
+
+                let score = 0;
+                if (title.includes(activeSearchQuery)) score += 40;
+                if (summary.includes(activeSearchQuery)) score += 22;
+                if (category.includes(activeSearchQuery)) score += 26;
+                if (location.includes(activeSearchQuery)) score += 12;
+                if (content.includes(activeSearchQuery)) score += 8;
+
+                tokens.forEach((token) => {
+                    if (title.includes(token)) score += 12;
+                    if (category.includes(token)) score += 8;
+                    if (summary.includes(token)) score += 6;
+                    if (location.includes(token)) score += 3;
+                    if (content.includes(token)) score += 2;
+                });
+
+                return { post, score };
+            })
+            .filter(Boolean)
+            .sort((a, b) => {
+                if (b.score !== a.score) {
+                    return b.score - a.score;
+                }
+
+                const dateA = new Date(a.post.publishedAt || a.post.updatedAt || 0).getTime();
+                const dateB = new Date(b.post.publishedAt || b.post.updatedAt || 0).getTime();
+                return dateB - dateA;
+            })
+            .map((entry) => entry.post);
+    }
+
+    if (latestFeedTitle && latestFeedCopy) {
+        if (activeContentFilter) {
+            const label = activeContentFilter.value ? String(activeContentFilter.value) : "Selected";
+            latestFeedTitle.textContent = `${label} stories`;
+            latestFeedCopy.textContent = `Showing ${visiblePosts.length} stor${visiblePosts.length === 1 ? "y" : "ies"} from the homepage + archive.`;
+        } else if (activeSearchQuery) {
+            latestFeedTitle.textContent = "Search results";
+            latestFeedCopy.textContent = `Showing ${visiblePosts.length} result${visiblePosts.length === 1 ? "" : "s"} from the homepage + archive.`;
+        } else {
+            latestFeedTitle.textContent = "News from the last 24 hours";
+            latestFeedCopy.textContent = "A rolling feed of recent stories, built to help you publish and update fast.";
+        }
+    }
+
+    if (searchMeta) {
+        if (activeSearchQuery) {
+            searchMeta.textContent = `${visiblePosts.length} result${visiblePosts.length === 1 ? "" : "s"} for “${activeSearchQuery}”.`;
+        } else if (activeContentFilter) {
+            searchMeta.textContent = `Browsing ${visiblePosts.length} stor${visiblePosts.length === 1 ? "y" : "ies"} in ${activeContentFilter.value}.`;
+        } else {
+            searchMeta.textContent = "";
+        }
     }
 
     renderHeroPost();
@@ -948,6 +1112,12 @@ function handleCommentSubmit(event) {
 
 function applySearch(query) {
     activeSearchQuery = query.trim().toLowerCase();
+
+    if (activeSearchQuery && activeContentFilter) {
+        activeContentFilter = null;
+        syncFilterUrl();
+    }
+
     renderAll();
 }
 
@@ -959,6 +1129,14 @@ if (searchForm && searchInput) {
 
     searchInput.addEventListener("input", () => {
         applySearch(searchInput.value);
+    });
+}
+
+if (searchClearButton && searchInput) {
+    searchClearButton.addEventListener("click", () => {
+        searchInput.value = "";
+        applySearch("");
+        searchInput.focus();
     });
 }
 
@@ -982,17 +1160,37 @@ archiveTabLinks.forEach((link) => {
     });
 });
 
-Array.from(document.querySelectorAll("[data-filter-kind][data-filter-value]")).forEach((link) => {
-    link.addEventListener("click", (event) => {
-        event.preventDefault();
-        activeContentFilter = {
-            kind: link.dataset.filterKind || "category",
-            value: link.dataset.filterValue || ""
-        };
-        syncFilterUrl();
-        renderAll();
-        document.querySelector("#mainFeed")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+document.addEventListener("click", (event) => {
+    const link = event.target.closest("a[data-filter-kind][data-filter-value]");
+
+    if (!link) {
+        return;
+    }
+
+    const kind = link.dataset.filterKind;
+    const value = link.dataset.filterValue;
+
+    if (!kind || !value) {
+        return;
+    }
+
+    event.preventDefault();
+
+    activeContentFilter = {
+        kind,
+        value
+    };
+
+    if (activeSearchQuery) {
+        activeSearchQuery = "";
+        if (searchInput) {
+            searchInput.value = "";
+        }
+    }
+
+    syncFilterUrl();
+    renderAll();
+    document.querySelector("#mainFeed")?.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
 if (hamburgerButton && sidebarNav && sidebarCloseButton && navOverlay) {
@@ -1050,7 +1248,7 @@ if (typeof trackVisit === "function") {
 }
 
 window.addEventListener("storage", (event) => {
-    if (event.key === "daily-affairs.posts.v1") {
+    if (event.key === "daily-affairs.posts.v2") {
         renderAll();
     }
 
