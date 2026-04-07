@@ -21,7 +21,6 @@ const latestUpdatesList = document.getElementById("latestUpdatesList");
 const searchInput = document.getElementById("searchInput");
 const searchForm = document.getElementById("searchForm");
 const searchClearButton = document.getElementById("searchClear");
-const searchMeta = document.getElementById("searchMeta");
 const currentDate = document.getElementById("currentDate");
 const liveDeskLabel = document.getElementById("liveDeskLabel");
 const tickerTrack = document.getElementById("tickerTrack");
@@ -480,12 +479,11 @@ function postMatchesFilter(post, filter) {
     if (filter.kind === "region") {
         const value = normalizeFilterValue(filter.value);
         const region = normalizeFilterValue(post.region);
-        const category = normalizeFilterValue(post.category);
-        return region === value || category === `${value} news`;
+        return region === value;
     }
 
     if (filter.kind === "category") {
-        return postMatchesCategoryGroup(post, filter.value);
+        return normalizeFilterValue(post?.category) === normalizeFilterValue(filter.value);
     }
 
     return true;
@@ -748,16 +746,6 @@ function renderAll() {
         } else {
             latestFeedTitle.textContent = "News from the last 24 hours";
             latestFeedCopy.textContent = "A rolling feed of recent stories, built to help you publish and update fast.";
-        }
-    }
-
-    if (searchMeta) {
-        if (activeSearchQuery) {
-            searchMeta.textContent = `${visiblePosts.length} result${visiblePosts.length === 1 ? "" : "s"} for “${activeSearchQuery}”.`;
-        } else if (activeContentFilter) {
-            searchMeta.textContent = `Browsing ${visiblePosts.length} stor${visiblePosts.length === 1 ? "y" : "ies"} in ${activeContentFilter.value}.`;
-        } else {
-            searchMeta.textContent = "";
         }
     }
 
