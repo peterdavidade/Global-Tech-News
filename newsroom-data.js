@@ -1,5 +1,6 @@
-(function () {
-    const POSTS_STORAGE_KEY = "daily-affairs.posts.v1";
+ (function () {
+    const POSTS_STORAGE_KEY = "daily-affairs.posts.v2";
+    const LEGACY_POSTS_STORAGE_KEY = "daily-affairs.posts.v1";
     const ANALYTICS_STORAGE_KEY = "daily-affairs.analytics.v1";
     const VISITOR_STORAGE_KEY = "daily-affairs.visitor-id.v1";
     const ADMIN_CONFIG_STORAGE_KEY = "daily-affairs.admin-config.v1";
@@ -8,8 +9,13 @@
     const LIVE_TICKER_STORAGE_KEY = "daily-affairs.live-ticker.v1";
     const ARCHIVE_TICKER_STORAGE_KEY = "daily-affairs.archive-ticker.v1";
     const STORE_UPDATED_EVENT = "daily-affairs.store-updated.v1";
-    const LIVE_POST_LIMIT = 4;
-    const LIVE_POST_WINDOW_MINUTES = 24 * 60;
+
+    // Homepage behavior:
+    // - Published posts stay on the homepage until a *new* post is published.
+    // - When a new publish would exceed this limit, the oldest published post is
+    //   moved to "archived" (so it appears on Previous News).
+    // - Nothing is ever truly deleted unless you press Delete in the admin console.
+    const HOMEPAGE_PUBLISHED_LIMIT = 4;
 
     const MEDIA_DB_NAME = "daily-affairs.media.v1";
     const MEDIA_DB_VERSION = 1;
@@ -22,6 +28,33 @@
     let remoteInitPromise = null;
     let remoteWatchStarted = false;
     let remoteUnsubscribers = [];
+    let postsCache = null;
+
+    function safeLocalStorageSetItem(key, value) {
+        try {
+            localStorage.setItem(key, value);
+            return true;
+        } catch (error) {
+            // Avoid blocking the app when localStorage quota is exceeded.
+            try {
+                if (key === POSTS_STORAGE_KEY) {
+                    localStorage.removeItem(LEGACY_POSTS_STORAGE_KEY);
+                }
+            } catch (cleanupError) {
+                // Ignore.
+            }
+
+            return false;
+        }
+    }
+
+    function cleanupLegacyStorageKeys() {
+        try {
+            localStorage.removeItem(LEGACY_POSTS_STORAGE_KEY);
+        } catch (error) {
+            // Ignore.
+        }
+    }
 
     function emitStoreUpdated() {
         try {
@@ -52,9 +85,17 @@
         return window.FirebaseNewsroom?.auth || null;
     }
 
+    function getFirebaseStorage() {
+        return window.FirebaseNewsroom?.storage || null;
+    }
+
     function isAdminSignedIn() {
         const auth = getFirebaseAuth();
         return Boolean(auth?.currentUser);
+    }
+
+    function isStorageConfigured() {
+        return Boolean(getFirebaseStorage());
     }
 
     function getSiteConfigDocRef() {
@@ -135,8 +176,9 @@
             .sort((postA, postB) => new Date(postB.publishedAt) - new Date(postA.publishedAt));
 
         if (posts.length) {
-            // Keep the rest of the app sync/synchronous by hydrating localStorage.
-            localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(posts));
+            // Keep the rest of the app sync/synchronous by hydrating localStorage (best effort).
+            postsCache = posts;
+            safeLocalStorageSetItem(POSTS_STORAGE_KEY, JSON.stringify(posts));
         }
 
         return posts;
@@ -176,8 +218,12 @@
     }
 
     async function writeSiteConfigToRemote(partial) {
-        if (!isFirebaseConfigured() || !isAdminSignedIn()) {
-            return null;
+        if (!isFirebaseConfigured()) {
+            throw new Error("Firebase is not configured.");
+        }
+
+        if (!isAdminSignedIn()) {
+            throw new Error("Admin is not signed in.");
         }
 
         const ref = getSiteConfigDocRef();
@@ -190,8 +236,12 @@
     }
 
     async function syncAllPostsToRemote(posts) {
-        if (!isFirebaseConfigured() || !isAdminSignedIn()) {
-            return null;
+        if (!isFirebaseConfigured()) {
+            throw new Error("Firebase is not configured.");
+        }
+
+        if (!isAdminSignedIn()) {
+            throw new Error("Admin is not signed in.");
         }
 
         const db = getFirebaseDb();
@@ -239,9 +289,61 @@
         return true;
     }
 
-    async function deletePostFromRemote(postId) {
-        if (!isFirebaseConfigured() || !isAdminSignedIn()) {
+    async function upsertPostToRemote(post) {
+        if (!isFirebaseConfigured()) {
+            throw new Error("Firebase is not configured.");
+        }
+
+        if (!isAdminSignedIn()) {
+            throw new Error("Admin is not signed in.");
+        }
+
+        const db = getFirebaseDb();
+        if (!db) {
             return null;
+        }
+
+        const normalized = normalizePost(post || {});
+
+        if (!Number.isFinite(normalized.id)) {
+            throw new Error("Post id is missing or invalid.");
+        }
+
+        await db.collection("posts").doc(String(normalized.id)).set(normalized, { merge: true });
+        return true;
+    }
+
+    async function uploadMediaFile(file, options) {
+        const storage = getFirebaseStorage();
+
+        if (!isFirebaseConfigured() || !storage) {
+            throw new Error("Firebase Storage is not configured.");
+        }
+
+        if (!file) {
+            throw new Error("No file provided.");
+        }
+
+        const folder = String(options?.folder || "uploads").trim() || "uploads";
+        const extension = String(file.name || "").split(".").pop();
+        const safeExtension = extension ? extension.replace(/[^a-z0-9]/gi, "").slice(0, 8).toLowerCase() : "";
+        const id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        const filename = safeExtension ? `${id}.${safeExtension}` : id;
+        const path = `${folder}/${filename}`;
+
+        const ref = storage.ref().child(path);
+        const snapshot = await ref.put(file);
+        const url = await snapshot.ref.getDownloadURL();
+        return { path, url };
+    }
+
+    async function deletePostFromRemote(postId) {
+        if (!isFirebaseConfigured()) {
+            throw new Error("Firebase is not configured.");
+        }
+
+        if (!isAdminSignedIn()) {
+            throw new Error("Admin is not signed in.");
         }
 
         const db = getFirebaseDb();
@@ -291,11 +393,18 @@
                         .sort((postA, postB) => new Date(postB.publishedAt) - new Date(postA.publishedAt));
 
                     if (posts.length) {
-                        localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(posts));
+                        postsCache = posts;
+                        safeLocalStorageSetItem(POSTS_STORAGE_KEY, JSON.stringify(posts));
                         emitStoreUpdated();
                     }
                 },
-                () => {}
+                (error) => {
+                    try {
+                        console.warn("NewsroomStore: posts subscription failed.", error);
+                    } catch (error2) {
+                        // Ignore.
+                    }
+                }
             );
             remoteUnsubscribers.push(unsubscribePosts);
         } catch (error) {
@@ -342,7 +451,13 @@
 
                     emitStoreUpdated();
                 },
-                () => {}
+                (error) => {
+                    try {
+                        console.warn("NewsroomStore: siteConfig subscription failed.", error);
+                    } catch (error2) {
+                        // Ignore.
+                    }
+                }
             );
             remoteUnsubscribers.push(unsubscribeConfig);
         } catch (error) {
@@ -360,13 +475,22 @@
             return remoteInitPromise;
         }
 
+        cleanupLegacyStorageKeys();
+
         remoteInitPromise = Promise.all([syncPostsFromRemote(), syncSiteConfigFromRemote()])
             .then(() => {
                 startRemoteWatchers();
                 emitStoreUpdated();
                 return true;
             })
-            .catch(() => false);
+            .catch((error) => {
+                try {
+                    console.warn("NewsroomStore: Firebase sync failed; using localStorage only.", error);
+                } catch (error2) {
+                    // Ignore.
+                }
+                return false;
+            });
 
         return remoteInitPromise;
     }
@@ -411,7 +535,7 @@
         return auth.onAuthStateChanged(callback);
     }
 
-    const DEFAULT_POSTS = [
+    const DEFAULT_POSTS = []; /*
         {
             id: 1,
             slug: "ghana-education-planners-review-digital-learning-rollout",
@@ -588,7 +712,7 @@
             publishedAt: "2026-03-19T13:48:00.000Z",
             updatedAt: "2026-03-19T13:48:00.000Z"
         }
-    ];
+    */
 
     function safeParse(value, fallback) {
         if (!value) {
@@ -611,8 +735,36 @@
             .slice(0, 80);
     }
 
-    function formatIsoDate(date) {
-        return new Date(date).toISOString();
+    function formatIsoDate(value, fallbackIso) {
+        const fallback = fallbackIso || new Date().toISOString();
+
+        try {
+            if (!value) {
+                return fallback;
+            }
+
+            if (value instanceof Date) {
+                return value.toISOString();
+            }
+
+            // Firestore Timestamp (compat + modular) support.
+            if (typeof value === "object" && typeof value.toDate === "function") {
+                const date = value.toDate();
+                return date instanceof Date ? date.toISOString() : fallback;
+            }
+
+            // Plain object timestamp: { seconds, nanoseconds }.
+            if (typeof value === "object" && typeof value.seconds === "number") {
+                const nanos = typeof value.nanoseconds === "number" ? value.nanoseconds : 0;
+                const date = new Date(value.seconds * 1000 + Math.floor(nanos / 1e6));
+                return Number.isFinite(date.getTime()) ? date.toISOString() : fallback;
+            }
+
+            const date = new Date(value);
+            return Number.isFinite(date.getTime()) ? date.toISOString() : fallback;
+        } catch (error) {
+            return fallback;
+        }
     }
 
     function getNowIso() {
@@ -622,17 +774,17 @@
     function ensurePostsSeeded() {
         const stored = safeParse(localStorage.getItem(POSTS_STORAGE_KEY), null);
 
-        if (Array.isArray(stored) && stored.length) {
+        if (Array.isArray(stored)) {
             return;
         }
 
-        localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(DEFAULT_POSTS));
+        safeLocalStorageSetItem(POSTS_STORAGE_KEY, JSON.stringify(DEFAULT_POSTS));
     }
 
     function normalizePost(post) {
         const nowIso = getNowIso();
         const title = String(post.title || "").trim();
-        const publishedAt = post.publishedAt ? formatIsoDate(post.publishedAt) : nowIso;
+        const publishedAt = post.publishedAt ? formatIsoDate(post.publishedAt, nowIso) : nowIso;
         const fallbackImage = String(post.imageSrc || "./images/Read More Icon.png").trim();
         const galleryImages = Array.isArray(post.galleryImages)
             ? post.galleryImages.map((image) => String(image || "").trim()).filter(Boolean).slice(0, 3)
@@ -660,7 +812,7 @@
             videoIds,
             status: post.status === "archived" ? "archived" : "published",
             publishedAt,
-            updatedAt: post.updatedAt ? formatIsoDate(post.updatedAt) : publishedAt
+            updatedAt: post.updatedAt ? formatIsoDate(post.updatedAt, publishedAt) : publishedAt
         };
     }
 
@@ -819,45 +971,56 @@
 
     function getPosts() {
         ensurePostsSeeded();
-        const stored = safeParse(localStorage.getItem(POSTS_STORAGE_KEY), []);
+        const stored = postsCache || safeParse(localStorage.getItem(POSTS_STORAGE_KEY), []);
         const normalized = enforcePublishingRules(stored);
-        localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(normalized));
+        postsCache = normalized;
+        safeLocalStorageSetItem(POSTS_STORAGE_KEY, JSON.stringify(normalized));
         return normalized;
     }
 
     function enforcePublishingRules(posts) {
-        const sortedPosts = posts
+        return (Array.isArray(posts) ? posts : [])
             .map(normalizePost)
             .sort((postA, postB) => new Date(postB.publishedAt) - new Date(postA.publishedAt));
-        const now = Date.now();
-        let liveSlotsUsed = 0;
+    }
 
-        return sortedPosts.map((post) => {
+    function enforceHomepagePublishedLimit(posts) {
+        const limit = Number(HOMEPAGE_PUBLISHED_LIMIT);
+
+        if (!Number.isFinite(limit) || limit <= 0) {
+            return posts;
+        }
+
+        const published = posts.filter((post) => post.status === "published");
+
+        if (published.length <= limit) {
+            return posts;
+        }
+
+        const keepIds = new Set(published.slice(0, limit).map((post) => post.id));
+        const nowIso = getNowIso();
+
+        return posts.map((post) => {
             if (post.status !== "published") {
                 return post;
             }
 
-            const publishedTime = new Date(post.publishedAt).getTime();
-            const minutesSincePublish = (now - publishedTime) / 60000;
-            const shouldArchiveForAge = Number.isFinite(minutesSincePublish) && minutesSincePublish > LIVE_POST_WINDOW_MINUTES;
-            const shouldArchiveForCount = liveSlotsUsed >= LIVE_POST_LIMIT;
-
-            if (shouldArchiveForAge || shouldArchiveForCount) {
-                return {
-                    ...post,
-                    status: "archived",
-                    updatedAt: getNowIso()
-                };
+            if (keepIds.has(post.id)) {
+                return post;
             }
 
-            liveSlotsUsed += 1;
-            return post;
+            return {
+                ...post,
+                status: "archived",
+                updatedAt: nowIso
+            };
         });
     }
 
     function savePosts(posts) {
-        const normalized = enforcePublishingRules(posts);
-        localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(normalized));
+        const normalized = enforceHomepagePublishedLimit(enforcePublishingRules(posts));
+        postsCache = normalized;
+        safeLocalStorageSetItem(POSTS_STORAGE_KEY, JSON.stringify(normalized));
         return normalized;
     }
 
@@ -883,6 +1046,8 @@
 
     async function createPost(postInput) {
         let posts = getPosts();
+        const beforeStateById = new Map(posts.map((post) => [post.id, { status: post.status, featured: Boolean(post.featured) }]));
+        const previousFeaturedId = posts.find((post) => post.featured)?.id || null;
         const nowIso = getNowIso();
         const newPost = normalizePost({
             ...postInput,
@@ -900,12 +1065,28 @@
 
         posts.unshift(newPost);
         posts = savePosts(posts);
-        await syncAllPostsToRemote(posts);
+
+        // Write only what's needed to Firestore to avoid large batch writes failing.
+        await upsertPostToRemote(newPost);
+        if (newPost.featured && previousFeaturedId && previousFeaturedId !== newPost.id) {
+            const previousFeatured = posts.find((post) => post.id === previousFeaturedId);
+            if (previousFeatured) {
+                await upsertPostToRemote(previousFeatured);
+            }
+        }
+
+        // Sync any posts whose status flipped due to the homepage published limit.
+        const statusChanged = posts.filter((post) => beforeStateById.get(post.id)?.status && beforeStateById.get(post.id).status !== post.status);
+        for (const post of statusChanged) {
+            await upsertPostToRemote(post);
+        }
         return newPost;
     }
 
     async function updatePost(postId, postInput) {
         const posts = getPosts();
+        const beforeStateById = new Map(posts.map((post) => [post.id, { status: post.status, featured: Boolean(post.featured) }]));
+        const previouslyFeaturedId = posts.find((post) => post.featured)?.id || null;
         const postIndex = posts.findIndex((post) => post.id === Number(postId));
 
         if (postIndex === -1) {
@@ -938,7 +1119,20 @@
 
         posts.splice(postIndex, 1, updatedPost);
         const saved = savePosts(posts);
-        await syncAllPostsToRemote(saved);
+
+        await upsertPostToRemote(updatedPost);
+        if (updatedPost.featured && previouslyFeaturedId && previouslyFeaturedId !== updatedPost.id) {
+            const previousFeatured = saved.find((post) => post.id === previouslyFeaturedId);
+            if (previousFeatured) {
+                await upsertPostToRemote(previousFeatured);
+            }
+        }
+
+        // If the homepage limit caused older published posts to be archived, sync those status changes too.
+        const statusChanged = saved.filter((post) => beforeStateById.get(post.id)?.status && beforeStateById.get(post.id).status !== post.status);
+        for (const post of statusChanged) {
+            await upsertPostToRemote(post);
+        }
         return updatedPost;
     }
 
@@ -962,12 +1156,26 @@
 
     async function setFeaturedPost(postId) {
         const targetId = Number(postId);
-        const posts = getPosts().map((post) => ({
+        const currentPosts = getPosts();
+        const previouslyFeaturedId = currentPosts.find((post) => post.featured)?.id || null;
+        const posts = currentPosts.map((post) => ({
             ...post,
             featured: post.id === targetId
         }));
         const saved = savePosts(posts);
-        await syncAllPostsToRemote(saved);
+
+        const nextFeatured = saved.find((post) => post.id === targetId) || null;
+        if (nextFeatured) {
+            await upsertPostToRemote(nextFeatured);
+        }
+
+        if (previouslyFeaturedId && previouslyFeaturedId !== targetId) {
+            const previousFeatured = saved.find((post) => post.id === previouslyFeaturedId);
+            if (previousFeatured) {
+                await upsertPostToRemote(previousFeatured);
+            }
+        }
+
         return saved.find((post) => post.id === targetId) || null;
     }
 
@@ -1095,11 +1303,13 @@
         onStoreUpdated,
         isFirebaseConfigured,
         isAdminSignedIn,
+        isStorageConfigured,
         signInAdmin,
         signOutAdmin,
         sendAdminPasswordReset,
         onAdminAuthStateChanged,
         bootstrapRemoteFromLocalIfEmpty,
+        uploadMediaFile,
         getPosts,
         savePosts,
         getPublishedPosts,

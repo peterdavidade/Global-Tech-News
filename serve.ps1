@@ -1,10 +1,16 @@
 param(
-    [int]$Port = 8000
+    [int]$Port = 8000,
+    [string]$HostName = "localhost"
 )
 
 $root = (Get-Location).Path
 $listener = [System.Net.HttpListener]::new()
-$prefix = "http://localhost:$Port/"
+$resolvedHost = if ([string]::IsNullOrWhiteSpace($HostName)) { "localhost" } else { $HostName.Trim() }
+# For sharing to phones on your LAN, pass -HostName "*" (may require URL ACL + firewall allow).
+if ($resolvedHost -eq "*") {
+    $resolvedHost = "+"
+}
+$prefix = "http://$resolvedHost`:$Port/"
 $listener.Prefixes.Add($prefix)
 $listener.Start()
 
@@ -66,4 +72,3 @@ try {
     $listener.Stop()
     $listener.Close()
 }
-

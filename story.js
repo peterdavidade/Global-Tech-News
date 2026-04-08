@@ -531,17 +531,32 @@ if (typeof trackVisit === "function") {
     trackVisit("story");
 }
 
-if (!storySlug || typeof getPostBySlug !== "function") {
-    renderMissingStory();
-} else {
+function renderFromStore() {
+    if (!storySlug || typeof getPostBySlug !== "function") {
+        renderMissingStory();
+        return;
+    }
+
     const post = getPostBySlug(storySlug);
 
     if (!post) {
         renderMissingStory();
-    } else {
-        renderStory(post);
-        renderRelated(post);
+        return;
     }
+
+    renderStory(post);
+    renderRelated(post);
+}
+
+if (!storySlug) {
+    renderMissingStory();
+} else {
+    const initPromise = typeof init === "function" ? init() : null;
+    Promise.resolve(initPromise)
+        .catch(() => null)
+        .finally(() => {
+            renderFromStore();
+        });
 }
 
 if (typeof onStoreUpdated === "function") {
@@ -562,6 +577,4 @@ if (typeof onStoreUpdated === "function") {
     });
 }
 
-if (typeof init === "function") {
-    init();
-}
+// init() is invoked above to avoid flashing "missing story" before remote posts hydrate.

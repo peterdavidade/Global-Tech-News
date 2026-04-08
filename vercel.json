@@ -2,6 +2,19 @@
     "rewrites": [
         { "source": "/admin", "destination": "/orbit-newsroom-4837.html" },
         { "source": "/admin.html", "destination": "/orbit-newsroom-4837.html" }
+    ],
+    "headers": [
+        {
+            "source": "/",
+            "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+        },
+        {
+            "source": "/(.*)\\.html",
+            "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+        },
+        {
+            "source": "/(.*)\\.(js|css)",
+            "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+        }
     ]
 }
-
